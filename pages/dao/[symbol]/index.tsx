@@ -10,6 +10,7 @@ import {
   Proposal,
   ProposalState,
   Vote,
+  VoteType,
   withCastVote,
   YesNoVote,
 } from '@solana/spl-governance'
@@ -33,6 +34,7 @@ import { notify } from '@utils/notifications'
 import { sendSignedTransaction } from '@utils/send'
 import { LOCALNET_REALM_ID as PYTH_LOCALNET_REALM_ID } from 'pyth-staking-api'
 import { hasInstructions } from '@components/ProposalStatusBadge'
+import WeightedProposalCard from '@components/WeightedProposalCard'
 
 const AccountsCompactWrapper = dynamic(
   () => import('@components/TreasuryAccount/AccountsCompactWrapper')
@@ -262,7 +264,10 @@ const REALM = () => {
   useEffect(() => {
     setSelectedProposals([])
     if (multiVoteMode) {
-      setFilteredProposals(votingProposals)
+      const proposals = votingProposals.filter(
+        (entry) => entry[1].account.voteType == VoteType.SINGLE_CHOICE
+      )
+      setFilteredProposals(proposals)
     } else {
       const proposals = filterProposals(allProposals, filters)
       setFilteredProposals(proposals)
@@ -270,7 +275,7 @@ const REALM = () => {
   }, [multiVoteMode])
 
   const allVotingProposalsSelected =
-    selectedProposals.length === votingProposals.length
+    selectedProposals.length === filteredProposals.length
   const hasCommunityVoteWeight =
     ownTokenRecord &&
     ownVoterWeight.hasMinAmountToVote(ownTokenRecord.account.governingTokenMint)
@@ -282,7 +287,7 @@ const REALM = () => {
       setSelectedProposals([])
     } else {
       setSelectedProposals(
-        votingProposals.map(([k, v]) => ({
+        filteredProposals.map(([k, v]) => ({
           proposal: v.account,
           proposalPk: new PublicKey(k),
         }))
@@ -517,23 +522,32 @@ const REALM = () => {
                     <div className="space-y-3">
                       {filteredProposals.length > 0 ? (
                         <>
-                          {paginatedProposals.map(([k, v]) =>
-                            multiVoteMode ? (
-                              <ProposalSelectCard
-                                key={k}
-                                proposalPk={new PublicKey(k)}
-                                proposal={v.account}
-                                selectedProposals={selectedProposals}
-                                setSelectedProposals={setSelectedProposals}
-                              />
-                            ) : (
-                              <ProposalCard
+                          {paginatedProposals.map(([k, v]) => {
+                            if (v.account.voteType === VoteType.SINGLE_CHOICE) {
+                              return multiVoteMode ? (
+                                <ProposalSelectCard
+                                  key={k}
+                                  proposalPk={new PublicKey(k)}
+                                  proposal={v.account}
+                                  selectedProposals={selectedProposals}
+                                  setSelectedProposals={setSelectedProposals}
+                                />
+                              ) : (
+                                <ProposalCard
+                                  key={k}
+                                  proposalPk={new PublicKey(k)}
+                                  proposal={v.account}
+                                />
+                              )
+                            }
+                            return (
+                              <WeightedProposalCard
                                 key={k}
                                 proposalPk={new PublicKey(k)}
                                 proposal={v.account}
                               />
                             )
-                          )}
+                          })}
                           <PaginationComponent
                             ref={pagination}
                             totalPages={Math.ceil(

@@ -1,3 +1,4 @@
+import { BN } from '@project-serum/anchor'
 import { Proposal } from '@solana/spl-governance'
 import useNftPluginStore from 'NftVotePlugin/store/nftPluginStore'
 import { getProposalMaxVoteWeight } from '../models/voteWeights'
@@ -25,6 +26,8 @@ export default function useProposalVotes(proposal?: Proposal) {
       noVoteCount: 0,
       minimumYesVotes: 0,
       yesVotesRequired: 0,
+      optionVotes: [],
+      totalVoteCount: 0,
     }
 
   const isCommunityVote =
@@ -43,9 +46,11 @@ export default function useProposalVotes(proposal?: Proposal) {
     fmtTokenAmount(maxVoteWeight, proposalMint.decimals) *
     (voteThresholdPct / 100)
 
-  const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
-  const yesVoteProgress = (yesVotePct / voteThresholdPct) * 100
   const isMultiProposal = proposal?.options?.length > 1
+  const yesVotePct = !isMultiProposal
+    ? calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
+    : 0
+  const yesVoteProgress = (yesVotePct / voteThresholdPct) * 100
   const yesVoteCount = !isMultiProposal
     ? fmtTokenAmount(proposal.getYesVoteCount(), proposalMint.decimals)
     : 0
@@ -53,7 +58,17 @@ export default function useProposalVotes(proposal?: Proposal) {
     ? fmtTokenAmount(proposal.getNoVoteCount(), proposalMint.decimals)
     : 0
 
-  const totalVoteCount = yesVoteCount + noVoteCount
+  const totalVoteCount = !isMultiProposal
+    ? yesVoteCount + noVoteCount
+    : proposal.options.reduce((acc, opt) => acc + opt.voteResult, 0)
+  const optionVotes = isMultiProposal
+    ? proposal.options.map((p) => {
+        return {
+          label: p.label,
+          relativeVoteResult: p.voteResult / totalVoteCount,
+        }
+      })
+    : []
 
   const getRelativeVoteCount = (voteCount: number) =>
     totalVoteCount === 0 ? 0 : (voteCount / totalVoteCount) * 100
@@ -77,5 +92,7 @@ export default function useProposalVotes(proposal?: Proposal) {
     relativeNoVotes,
     minimumYesVotes,
     yesVotesRequired,
+    optionVotes,
+    totalVoteCount,
   }
 }

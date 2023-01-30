@@ -5,49 +5,27 @@ import useProposal from 'hooks/useProposal'
 import ProposalStateBadge from 'components/ProposalStatusBadge'
 import { InstructionPanel } from 'components/instructions/instructionPanel'
 import DiscussionPanel from 'components/chat/DiscussionPanel'
-import VotePanel from 'components/VotePanel'
-import ApprovalQuorum from 'components/ApprovalQuorum'
 import useRealm from 'hooks/useRealm'
-import useProposalVotes from 'hooks/useProposalVotes'
 import ProposalTimeStatus from 'components/ProposalTimeStatus'
 import React, { useEffect, useState } from 'react'
-import ProposalActionsPanel from '@components/ProposalActions'
 import { getRealmExplorerHost } from 'tools/routing'
 import { ProposalState } from '@solana/spl-governance'
-import VoteResultStatus from '@components/VoteResultStatus'
-import VoteResults from '@components/VoteResults'
 import { resolveProposalDescription } from '@utils/helpers'
 import PreviousRouteBtn from '@components/PreviousRouteBtn'
-import Link from 'next/link'
-import useQueryContext from '@hooks/useQueryContext'
-import { ChevronRightIcon } from '@heroicons/react/solid'
-import ProposalExecutionCard from '@components/ProposalExecutionCard'
-import useWalletStore from 'stores/useWalletStore'
 import ProposalVotingPower from '@components/ProposalVotingPower'
 import { useMediaQuery } from 'react-responsive'
-import NftProposalVoteState from 'NftVotePlugin/NftProposalVoteState'
 import { Remark } from 'react-remark'
+import WeightedVoteResults from '@components/WeightedVoteResults'
+import WeightedVotePanel from '@components/WeightedVotePanel'
 
-const Proposal = () => {
-  const { realmInfo, symbol } = useRealm()
+const WeightedProposal = () => {
+  const { realmInfo } = useRealm()
   const { proposal, descriptionLink, governance } = useProposal()
   const [description, setDescription] = useState('')
-  const { yesVoteProgress, yesVotesRequired } = useProposalVotes(
-    proposal?.account
-  )
-  const currentWallet = useWalletStore((s) => s.current)
   const showResults =
     proposal &&
     proposal.account.state !== ProposalState.Cancelled &&
     proposal.account.state !== ProposalState.Draft
-
-  const votePassed =
-    proposal &&
-    (proposal.account.state === ProposalState.Completed ||
-      proposal.account.state === ProposalState.Executing ||
-      proposal.account.state === ProposalState.SigningOff ||
-      proposal.account.state === ProposalState.Succeeded ||
-      proposal.account.state === ProposalState.ExecutingWithErrors)
 
   const votingEnded =
     !!governance &&
@@ -68,17 +46,11 @@ const Proposal = () => {
     }
   }, [descriptionLink])
 
-  const { fmtUrlWithCluster } = useQueryContext()
   const showTokenBalance = proposal
     ? proposal.account.state === ProposalState.Draft ||
       proposal.account.state === ProposalState.SigningOff ||
       (proposal.account.state === ProposalState.Voting && !votingEnded)
     : true
-  const showProposalExecution =
-    proposal &&
-    (proposal.account.state === ProposalState.Succeeded ||
-      proposal.account.state === ProposalState.Executing ||
-      proposal.account.state === ProposalState.ExecutingWithErrors)
 
   return (
     <div className="grid grid-cols-12 gap-4">
@@ -158,48 +130,11 @@ const Proposal = () => {
               ) : (
                 <h3 className="mb-4">Results</h3>
               )}
-              {proposal?.account.state === ProposalState.Voting ? (
-                <div className="pb-3">
-                  <ApprovalQuorum
-                    yesVotesRequired={yesVotesRequired}
-                    progress={yesVoteProgress}
-                    showBg
-                  />
-                </div>
-              ) : (
-                <div className="pb-3">
-                  <VoteResultStatus
-                    progress={yesVoteProgress}
-                    votePassed={votePassed}
-                    yesVotesRequired={yesVotesRequired}
-                  />
-                </div>
-              )}
-              <VoteResults proposal={proposal.account} />
-              {proposal && (
-                <div className="flex justify-end mt-4">
-                  <Link
-                    href={fmtUrlWithCluster(
-                      `/dao/${symbol}/proposal/${proposal.pubkey}/explore`
-                    )}
-                    passHref
-                  >
-                    <a className="text-sm flex items-center default-transition text-fgd-2 transition-all hover:text-fgd-3">
-                      Explore
-                      <ChevronRightIcon className="flex-shrink-0 h-6 w-6" />
-                    </a>
-                  </Link>
-                </div>
-              )}
+              <WeightedVoteResults proposal={proposal.account} />
             </div>
           </div>
         ) : null}
-        <VotePanel />
-        <NftProposalVoteState proposal={proposal}></NftProposalVoteState>
-        {proposal && currentWallet && showProposalExecution && (
-          <ProposalExecutionCard />
-        )}
-        <ProposalActionsPanel />
+        <WeightedVotePanel />
         {!isTwoCol && proposal && (
           <div className="bg-bkg-2 rounded-lg p-4 md:p-6 ">
             <DiscussionPanel />
@@ -210,4 +145,4 @@ const Proposal = () => {
   )
 }
 
-export default Proposal
+export default WeightedProposal

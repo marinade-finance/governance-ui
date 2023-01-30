@@ -99,6 +99,16 @@ export const createProposal = async (
   const voteType = VoteType.SINGLE_CHOICE
   const options = ['Approve']
   const useDenyOption = true
+  // const voteType = VoteType.WEIGTHED_CHOICE(5, 5)
+  // const options = [
+  //   'Validator 1',
+  //   'Validator 2',
+  //   'Validator 3',
+  //   'Validator 4',
+  //   'Validator 5',
+  //   'Validator 6',
+  // ]
+  // const useDenyOption = false
 
   //will run only if plugin is connected with realm
   const plugin = await client?.withUpdateVoterWeightRecord(

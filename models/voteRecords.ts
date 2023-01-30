@@ -18,7 +18,7 @@ export function isYesVote(voteRecord: VoteRecord) {
           return false
         }
         default:
-          throw new Error('Invalid voteKind')
+          return true
       }
     }
     default:
