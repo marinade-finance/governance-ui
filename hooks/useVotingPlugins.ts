@@ -27,6 +27,12 @@ import { STAKING_ADDRESS as PYTH_STAKING_ADDRESS } from 'pyth-staking-api'
 import useGatewayPluginStore from '../GatewayPlugin/store/gatewayPluginStore'
 import { getGatekeeperNetwork } from '../GatewayPlugin/sdk/accounts'
 import { NFTWithMeta } from '@utils/uiTypes/VotePlugin'
+import useCrewsPluginStore from 'CrewsVotePlugin/store/crewsPluginStore'
+import {
+  fetchCrews,
+  findCrewByTokenOwnerRecord,
+} from 'CrewsVotePlugin/sdk/crews'
+import { getCrewsMaxVoterWeightAddress } from 'CrewsVotePlugin/sdk/accounts'
 
 export const vsrPluginsPks: string[] = [
   '4Q6WW2ouZ6V3iaNm56MTd5n2tnTm4C5fiH8miFHnAFHo',
@@ -43,16 +49,21 @@ export const gatewayPluginsPks: string[] = [
   'GgathUhdrCWRHowoRKACjgWhYHfxCEdBi5ViqYN6HVxk', // v2, supporting composition
 ]
 
+export const crewsPluginPks: string[] = [
+  'crew5xAYZNuXYUSZRaX8NcXkaozgjBny2nUw6ycPpCe',
+]
+
 export const switchboardPluginsPks: string[] = [SWITCHBOARD_ADDIN_ID.toBase58()]
 
 export const pythPluginsPks: string[] = [PYTH_STAKING_ADDRESS.toBase58()]
 
 export function useVotingPlugins() {
-  const { realm, config, ownTokenRecord } = useRealm()
+  const { realm, config, ownTokenRecord, tokenRecords } = useRealm()
   const {
     handleSetVsrRegistrar,
     handleSetVsrClient,
     handleSetNftClient,
+    handleSetCrewsClient,
     handleSetGatewayClient,
     handleSetSwitchboardClient,
     handleSetNftRegistrar,
@@ -75,12 +86,18 @@ export function useVotingPlugins() {
     setOracleKeys,
     setInstructions,
   } = useSwitchboardPluginStore()
+  const {
+    setIsLoadingCrews,
+    setVotingCrews,
+    setCurrentMaxVoterPublicKey,
+  } = useCrewsPluginStore()
 
   const wallet = useWalletStore((s) => s.current)
   const connection = useWalletStore((s) => s.connection)
   const connected = useWalletStore((s) => s.connected)
   const vsrClient = useVotePluginsClientStore((s) => s.state.vsrClient)
   const nftClient = useVotePluginsClientStore((s) => s.state.nftClient)
+  const crewsClient = useVotePluginsClientStore((s) => s.state.crewsClient)
   const gatewayClient = useVotePluginsClientStore((s) => s.state.gatewayClient)
   const switchboardClient = useVotePluginsClientStore(
     (s) => s.state.switchboardClient
@@ -117,6 +134,38 @@ export function useVotingPlugins() {
       })
     }
     setIsLoadingNfts(false)
+  }
+  const handleGetCrewsVoting = async () => {
+    if (!wallet || !wallet.publicKey || !crewsClient) {
+      setVotingCrews([])
+      return
+    }
+    setIsLoadingCrews(true)
+
+    try {
+      const usersWallet = (wallet as unknown) as anchor.Wallet
+      const crews = await fetchCrews(
+        crewsClient,
+        Object.values(tokenRecords).flatMap((record) => {
+          if (
+            record.account.governanceDelegate?.equals(usersWallet.publicKey)
+          ) {
+            return [record.pubkey]
+          }
+          return []
+        })
+      )
+
+      setVotingCrews(crews)
+    } catch (e) {
+      console.log(e)
+      notify({
+        message: "Your crews couldn't be loaded",
+        type: 'error',
+      })
+    }
+
+    setIsLoadingCrews(false)
   }
   const handleGetSwitchboardVoting = async () => {
     if (!wallet || !wallet.publicKey || !realm) {
@@ -279,7 +328,7 @@ export function useVotingPlugins() {
     }
   }
 
-  const handleMaxVoterWeight = async () => {
+  const handleNftMaxVoterWeight = async () => {
     const { maxVoterWeightRecord } = await getPluginMaxVoterWeightRecord(
       realm!.pubkey,
       realm!.account.communityMint,
@@ -306,10 +355,31 @@ export function useVotingPlugins() {
       nft.collection.creators?.filter((x) => x.verified).length > 0
     )
   }
+  const handleCrewsMaxVoterWeight = async () => {
+    if (crewsClient && ownTokenRecord) {
+      const crew = await findCrewByTokenOwnerRecord(
+        ownTokenRecord.pubkey,
+        crewsClient.sdk
+      )
+      const maxVoterWeightRecord = getCrewsMaxVoterWeightAddress(
+        crewsClient.sdk,
+        crew?.root.address
+      )
+
+      if (maxVoterWeightRecord) {
+        setCurrentMaxVoterPublicKey(maxVoterWeightRecord)
+      }
+    } else {
+      setCurrentMaxVoterPublicKey(undefined)
+    }
+  }
   useEffect(() => {
     if (wallet) {
       if (currentPluginPk) {
         handleSetVsrClient(wallet, connection, currentPluginPk)
+      }
+      if (realm) {
+        handleSetCrewsClient(wallet, connection, realm.pubkey)
       }
 
       handleSetNftClient(wallet, connection)
@@ -318,7 +388,12 @@ export function useVotingPlugins() {
       handleSetPythClient(wallet, connection)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree
-  }, [connection.endpoint, wallet, currentPluginPk?.toBase58()])
+  }, [
+    connection.endpoint,
+    wallet,
+    currentPluginPk?.toBase58(),
+    realm?.pubkey.toBase58(),
+  ])
 
   useEffect(() => {
     const handleVsrPlugin = () => {
@@ -348,6 +423,22 @@ export function useVotingPlugins() {
         if (connected) {
           handleSetCurrentRealmVotingClient({
             client: nftClient,
+            realm,
+            walletPk:
+              ownTokenRecord?.account?.governingTokenOwner || wallet?.publicKey,
+          })
+        }
+      }
+    }
+    const handleCrewsPlugin = () => {
+      if (
+        crewsClient &&
+        currentPluginPk &&
+        crewsPluginPks.includes(currentPluginPk.toBase58())
+      ) {
+        if (connected) {
+          handleSetCurrentRealmVotingClient({
+            client: crewsClient,
             realm,
             walletPk:
               ownTokenRecord?.account?.governingTokenOwner || wallet?.publicKey,
@@ -421,6 +512,7 @@ export function useVotingPlugins() {
         ownTokenRecord?.account?.governingTokenOwner.toBase58()
     ) {
       handleNftplugin()
+      handleCrewsPlugin()
       handleGatewayPlugin()
       handleVsrPlugin()
       handleSwitchboardPlugin()
@@ -439,6 +531,8 @@ export function useVotingPlugins() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree
     pythClient?.program.programId.toBase58(),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree
+    crewsClient?.program.programId.toBase58(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree
     realm?.pubkey.toBase58(),
     connection.endpoint,
     connected,
@@ -446,23 +540,26 @@ export function useVotingPlugins() {
   ])
 
   useEffect(() => {
-    if (
-      currentPluginPk &&
-      switchboardPluginsPks.includes(currentPluginPk.toBase58())
-    ) {
-      handleGetSwitchboardVoting()
+    if (currentPluginPk) {
+      if (switchboardPluginsPks.includes(currentPluginPk.toBase58())) {
+        handleGetSwitchboardVoting()
+      } else if (crewsPluginPks.includes(currentPluginPk.toBase58())) {
+        handleGetCrewsVoting()
+      }
     }
 
     if (usedCollectionsPks.length && realm) {
       if (connected && currentClient.walletPk?.toBase58()) {
         handleGetNfts()
       }
-      handleMaxVoterWeight()
+      handleNftMaxVoterWeight()
     } else if (realm) {
       handleGetSwitchboardVoting()
+      handleCrewsMaxVoterWeight()
     } else {
       setVotingNfts([], currentClient, nftMintRegistrar)
       setMaxVoterWeight(null)
+      setCurrentMaxVoterPublicKey(undefined)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree
   }, [
