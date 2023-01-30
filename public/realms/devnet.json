@@ -114,12 +114,17 @@
   },
   {
     "symbol": "MNDE",
+    "category": "defi",
+    "bannerImage": "https://i.imgur.com/I30J9NT.png",
     "displayName": "Marinade DAO",
-    "programId": "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw",
-    "realmId": "Bdow7yGwdvsAjbTFHk5h8jXd7AW3bbMxwxkawNuoVqE3",
-    "ogImage": "https://marinade.finance/static/8665458407ac84338260b729267d0c53/ce52d/marinade-logo.avif",
+    "programId": "mgo6Xa1798XksmxhJsa9bjWEBjgbETMFH3NvUXP9hkF",
+    "realmId": "F7bUNxBUtsGiWgs9VWsdwoCsttqPB9vT1ozNCts8aKsh",
     "website": "https://marinade.finance/",
-    "twitter": "@marinadefinance"
+    "twitter": "@marinadefinance",
+    "ogImage": "https://i.imgur.com/vEFzgY4.png",
+    "shortDescription": "Secure Solana and earn rewards without your funds locked in.",
+    "discord": "https://discord.com/invite/6EtUf4Euu6",
+    "github": "https://github.com/marinade-finance"
   },
   {
     "symbol": "REALM99",
