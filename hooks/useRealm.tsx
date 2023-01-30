@@ -19,6 +19,7 @@ import {
   SwitchboardQueueVoteWeight,
   VoteRegistryVoterWeight,
   VoterWeight,
+  VoteCrewWeight,
 } from '../models/voteWeights'
 import useMembersStore from 'stores/useMembersStore'
 import useWalletStore from '../stores/useWalletStore'
@@ -28,9 +29,11 @@ import {
   switchboardPluginsPks,
   pythPluginsPks,
   gatewayPluginsPks,
+  crewsPluginPks,
 } from './useVotingPlugins'
 import useGatewayPluginStore from '../GatewayPlugin/store/gatewayPluginStore'
 import useSwitchboardPluginStore from 'SwitchboardVotePlugin/store/switchboardStore'
+import useCrewsPluginStore from 'CrewsVotePlugin/store/crewsPluginStore'
 
 export default function useRealm() {
   const router = useRouter()
@@ -52,6 +55,7 @@ export default function useRealm() {
   } = useWalletStore((s) => s.selectedRealm)
   const votingPower = useDepositStore((s) => s.state.votingPower)
   const nftVotingPower = useNftPluginStore((s) => s.state.votingPower)
+  const crewsVotingPower = useCrewsPluginStore((s) => s.state.votingPower)
   const gatewayVotingPower = useGatewayPluginStore((s) => s.state.votingPower)
   const sbVotingPower = useSwitchboardPluginStore((s) => s.state.votingPower)
   const [realmInfo, setRealmInfo] = useState<RealmInfo | undefined>(undefined)
@@ -60,6 +64,9 @@ export default function useRealm() {
   const [pythVoterWeight, setPythVoterWeight] = useState<PythBalance>()
   const isPythclientMode =
     currentPluginPk && pythPluginsPks.includes(currentPluginPk?.toBase58())
+  const crewTokenRecord = useCrewsPluginStore(
+    (s) => s.state.currentTokenOwnerRecord
+  )
 
   //Move to store + move useEffect to main app index,
   //useRealm is used very often across application
@@ -128,11 +135,14 @@ export default function useRealm() {
       ) {
         return tokenRecords[selectedCommunityDelegate]
       }
+      if (crewTokenRecord) {
+        return crewTokenRecord
+      }
 
       return tokenRecords[wallet.publicKey.toBase58()]
     }
     return undefined
-  }, [tokenRecords, wallet, selectedCommunityDelegate])
+  }, [tokenRecords, crewTokenRecord, wallet, selectedCommunityDelegate])
 
   // returns array of community tokenOwnerRecords that connected wallet has been delegated
   const ownDelegateTokenRecords = useMemo(() => {
@@ -232,6 +242,7 @@ export default function useRealm() {
     sbVotingPower,
     pythVotingPower,
     gatewayVotingPower,
+    crewsVotingPower,
     ownCouncilTokenRecord
   )
   return {
@@ -270,6 +281,7 @@ const getVoterWeight = (
   sbVotingPower: BN,
   pythVotingPower: BN,
   gatewayVotingPower: BN,
+  crewsVotingPower: BN,
   ownCouncilTokenRecord: ProgramAccount<TokenOwnerRecord> | undefined
 ) => {
   if (currentPluginPk) {
@@ -298,6 +310,13 @@ const getVoterWeight = (
         ownTokenRecord,
         ownCouncilTokenRecord,
         gatewayVotingPower
+      )
+    }
+    if (crewsPluginPks.includes(currentPluginPk.toBase58())) {
+      return new VoteCrewWeight(
+        ownTokenRecord,
+        ownCouncilTokenRecord,
+        crewsVotingPower
       )
     }
   }
