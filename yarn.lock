@@ -2163,6 +2163,14 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.10.1.tgz#5bd16082261d7364eabb511c788f00937dac588d"
   integrity sha512-z+ILK8Q3y+nfUl43ctCPuR4Y2bIxk/ooCQFwZxhtci1EhAtMDzMAx2W25qx8G1PPL9UUOdnUax19+F0OjXoj4w==
 
+"@marinade.finance/kedgeree-sdk@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@marinade.finance/kedgeree-sdk/-/kedgeree-sdk-1.0.3.tgz#50495fc18ad34ebaf0295823468c58cbf0ac8f29"
+  integrity sha512-BflAEptTZOvga7hE6XdIVr+QM34QEnxfVOHQntF9JRVSFQ/SQ9jXESCTRuIazMU1tNIYGGI02i5aOJONwYvTnQ==
+  dependencies:
+    "@project-serum/anchor" "0.24"
+    "@saberhq/anchor-contrib" "^1.14"
+
 "@marinade.finance/marinade-ts-sdk@2.0.9":
   version "2.0.9"
   resolved "https://registry.yarnpkg.com/@marinade.finance/marinade-ts-sdk/-/marinade-ts-sdk-2.0.9.tgz#0268d8776480d613cab43dbec913749242454148"
@@ -2171,6 +2179,28 @@
     "@project-serum/anchor" "^0.18.2"
     "@solana/spl-token" "^0.1.8"
     borsh "^0.6.0"
+
+"@marinade.finance/sg-crews-sdk@0.1.12":
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/@marinade.finance/sg-crews-sdk/-/sg-crews-sdk-0.1.12.tgz#71d3457d1b0cb3b47e3b6d7daad67c871db9d35b"
+  integrity sha512-ZLWnSR0lmXU+ExIANXtFGu9+s3bgLCmMo1R8yIlEINIx7jsLxT8TsTKu7DN8jw6Uto5Xv3Rs1nUm7hdKt8+Fjw==
+  dependencies:
+    "@marinade.finance/kedgeree-sdk" "^1.0.3"
+    "@marinade.finance/spl-governance" "^0.3.20"
+    "@saberhq/solana-contrib" "^1.14.9"
+
+"@marinade.finance/spl-governance@^0.3.20", "@solana/spl-governance@npm:@marinade.finance/spl-governance@0.3.20":
+  version "0.3.20"
+  resolved "https://registry.yarnpkg.com/@marinade.finance/spl-governance/-/spl-governance-0.3.20.tgz#dbabb5859afb76e32fa73b065bc7f75b4fcb00e6"
+  integrity sha512-8IQjNtVuHHKKO5VHDXHf5kl7WFbdYMmZWGVL4Xw/0lqXldHoYVAs4apx1GCAMpYprYaiKjcucCJKj4d+xEq69Q==
+  dependencies:
+    "@solana/web3.js" "^1.22.0"
+    axios "^1.1.3"
+    bignumber.js "^9.0.1"
+    bn.js "^5.1.3"
+    borsh "^0.3.1"
+    bs58 "^4.0.1"
+    superstruct "^0.15.2"
 
 "@mean-dao/msp@3.0.1-alpha.13":
   version "3.0.1-alpha.13"
@@ -3029,7 +3059,7 @@
     snake-case "^3.0.4"
     toml "^3.0.0"
 
-"@project-serum/anchor@0.24.2", "@project-serum/anchor@^0.24.2":
+"@project-serum/anchor@0.24", "@project-serum/anchor@0.24.2", "@project-serum/anchor@^0.24.2":
   version "0.24.2"
   resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.24.2.tgz#a3c52a99605c80735f446ca9b3a4885034731004"
   integrity sha512-0/718g8/DnEuwAidUwh5wLYphUYXhUbiClkuRNhvNoa+1Y8a4g2tJyxoae+emV+PG/Gikd/QUBNMkIcimiIRTA==
@@ -4050,7 +4080,7 @@
     lodash.mapvalues "^4.6.0"
     tslib "^2.3.1"
 
-"@saberhq/anchor-contrib@^1.12.47", "@saberhq/anchor-contrib@^1.12.48", "@saberhq/anchor-contrib@^1.14.1", "@saberhq/anchor-contrib@^1.14.11", "@saberhq/anchor-contrib@^1.14.9":
+"@saberhq/anchor-contrib@^1.12.47", "@saberhq/anchor-contrib@^1.12.48", "@saberhq/anchor-contrib@^1.14", "@saberhq/anchor-contrib@^1.14.1", "@saberhq/anchor-contrib@^1.14.11", "@saberhq/anchor-contrib@^1.14.9":
   version "1.14.11"
   resolved "https://registry.yarnpkg.com/@saberhq/anchor-contrib/-/anchor-contrib-1.14.11.tgz#cebaac040faea643ade8ecb6afeeb2dcdf5a33a2"
   integrity sha512-6fOMC9XjuMSpGin/5HGqDita/dYzndjMMUNjht7yQZzD9638cdjrAutwZjvYwMUepKLdJ5CQV4bE74bSeMF9HQ==
@@ -4097,7 +4127,7 @@
     tiny-invariant "^1.2.0"
     tslib "^2.3.1"
 
-"@saberhq/solana-contrib@^1.12.23", "@saberhq/solana-contrib@^1.12.26", "@saberhq/solana-contrib@^1.12.47", "@saberhq/solana-contrib@^1.12.48", "@saberhq/solana-contrib@^1.12.53", "@saberhq/solana-contrib@^1.14.1", "@saberhq/solana-contrib@^1.14.11", "@saberhq/solana-contrib@^1.14.9":
+"@saberhq/solana-contrib@1.14.11", "@saberhq/solana-contrib@^1.12.23", "@saberhq/solana-contrib@^1.12.26", "@saberhq/solana-contrib@^1.12.47", "@saberhq/solana-contrib@^1.12.48", "@saberhq/solana-contrib@^1.12.53", "@saberhq/solana-contrib@^1.14.1", "@saberhq/solana-contrib@^1.14.11", "@saberhq/solana-contrib@^1.14.9":
   version "1.14.11"
   resolved "https://registry.yarnpkg.com/@saberhq/solana-contrib/-/solana-contrib-1.14.11.tgz#d4a6a09f426afb353fc5727b06365446d4642bb7"
   integrity sha512-HOEJpTZnSGmrfJG2gV18vQbtI14ET9l4/Q1yyPk4R2dkydxZIfBIPCI9SRWZ9g01/nuob3Fryd79Ca6QDk7qjw==
@@ -4427,6 +4457,7 @@
     bs58 "^4.0.1"
     superstruct "^0.15.2"
 
+<<<<<<< HEAD
 "@solana/spl-governance@0.3.25":
   version "0.3.25"
   resolved "https://registry.yarnpkg.com/@solana/spl-governance/-/spl-governance-0.3.25.tgz#57563003ebd4cf0bf778876035828196e34e29fd"
@@ -4440,6 +4471,8 @@
     bs58 "^4.0.1"
     superstruct "^0.15.2"
 
+=======
+>>>>>>> 0105e73e (feat: added relevant deps)
 "@solana/spl-governance@^0.0.29":
   version "0.0.29"
   resolved "https://registry.yarnpkg.com/@solana/spl-governance/-/spl-governance-0.0.29.tgz#8a691ace5242a1174ede73657c06267184f1c4b3"
