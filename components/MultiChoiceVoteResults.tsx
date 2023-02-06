@@ -71,7 +71,7 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
               <div className="flex flex-row mb-4 gap-10">
                 {!votesExist ? <p>No votes casted yet</p> : undefined}
                 {reducedOptions.map((opt, index) => (
-                  <div>
+                  <div key={opt.label}>
                     <div className="flex flex-row items-center">
                       <div
                         className={`${COLORS[index]} w-3 h-3 rounded-lg mr-2`}

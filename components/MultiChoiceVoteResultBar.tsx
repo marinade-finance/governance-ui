@@ -18,6 +18,7 @@ const MultiChoiceVoteResultsBar = ({
       {votesExist &&
         options.map((option, index) => (
           <div
+            key={option.label}
             style={{
               width: `${option.relativeVoteResult * 100}%`,
             }}
