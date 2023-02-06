@@ -27,6 +27,8 @@ import ProposalVotingPower from '@components/ProposalVotingPower'
 import { useMediaQuery } from 'react-responsive'
 import NftProposalVoteState from 'NftVotePlugin/NftProposalVoteState'
 import ProposalWarnings from './ProposalWarnings'
+import MultiChoiceVotesCasted from '@components/MultiChoiceVotesCasted'
+import MultiChoiceVoteResults from '@components/MultiChoiceVoteResults'
 
 const Proposal = () => {
   const { realmInfo, symbol } = useRealm()
@@ -137,37 +139,46 @@ const Proposal = () => {
               ) : (
                 <h3 className="mb-4">Results</h3>
               )}
-              {proposal?.account.state === ProposalState.Voting ? (
+              {voteData.multiWeightVotes ? (
                 <>
-                  <div className="pb-3">
-                    <ApprovalProgress
-                      votesRequired={voteData.yesVotesRequired}
-                      progress={voteData.yesVoteProgress}
-                      showBg
-                    />
-                  </div>
-                  {voteData._programVersion !== undefined &&
-                  // @asktree: here is some typescript gore because typescript doesn't know that a number being > 3 means it isn't 1 or 2
-                  voteData._programVersion !== 1 &&
-                  voteData._programVersion !== 2 &&
-                  voteData.veto !== undefined &&
-                  (voteData.veto.voteProgress ?? 0) > 0 ? (
-                    <div className="pb-3">
-                      <VetoProgress
-                        votesRequired={voteData.veto.votesRequired}
-                        progress={voteData.veto.voteProgress}
-                        showBg
-                      />
-                    </div>
-                  ) : undefined}
+                  <MultiChoiceVotesCasted />
+                  <MultiChoiceVoteResults proposal={proposal.account} />
                 </>
               ) : (
-                <div className="pb-3">
-                  <VoteResultStatus />
-                </div>
+                <>
+                  {proposal?.account.state === ProposalState.Voting ? (
+                    <>
+                      <div className="pb-3">
+                        <ApprovalProgress
+                          votesRequired={voteData.yesVotesRequired}
+                          progress={voteData.yesVoteProgress}
+                          showBg
+                        />
+                      </div>
+                      {voteData._programVersion !== undefined &&
+                      // @asktree: here is some typescript gore because typescript doesn't know that a number being > 3 means it isn't 1 or 2
+                      voteData._programVersion !== 1 &&
+                      voteData._programVersion !== 2 &&
+                      voteData.veto !== undefined &&
+                      (voteData.veto.voteProgress ?? 0) > 0 ? (
+                        <div className="pb-3">
+                          <VetoProgress
+                            votesRequired={voteData.veto.votesRequired}
+                            progress={voteData.veto.voteProgress}
+                            showBg
+                          />
+                        </div>
+                      ) : undefined}
+                    </>
+                  ) : (
+                    <div className="pb-3">
+                      <VoteResultStatus />
+                    </div>
+                  )}
+                  <VoteResults proposal={proposal.account} />
+                </>
               )}
-              <VoteResults proposal={proposal.account} />
-              {proposal && (
+              {proposal && !voteData.multiWeightVotes && (
                 <div className="flex justify-end mt-4">
                   <Link
                     href={fmtUrlWithCluster(
