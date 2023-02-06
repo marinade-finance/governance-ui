@@ -12,6 +12,7 @@ import ProposalMyVoteBadge from '../components/ProposalMyVoteBadge'
 import useQueryContext from '../hooks/useQueryContext'
 import { PublicKey } from '@solana/web3.js'
 import VoteResults from './VoteResults'
+import MultiChoiceVoteResults from './MultiChoiceVoteResults'
 
 type ProposalCardProps = {
   proposalPk: PublicKey
@@ -62,16 +63,22 @@ const ProposalCard = ({ proposalPk, proposal }: ProposalCardProps) => {
             </div>
             {proposal.state === ProposalState.Voting && (
               <div className="border-t border-fgd-4 flex flex-col lg:flex-row mt-2 p-4 gap-x-4 gap-y-3">
-                <div className="w-full lg:w-auto flex-1">
-                  <VoteResults isListView proposal={proposal} />
-                </div>
-                <div className="border-r border-fgd-4 hidden lg:block" />
-                <div className="w-full lg:w-auto flex-1">
-                  <ApprovalProgress
-                    progress={votesData.yesVoteProgress}
-                    votesRequired={votesData.yesVotesRequired}
-                  />
-                </div>
+                {!votesData.multiWeightVotes ? (
+                  <>
+                    <div className="w-full lg:w-auto flex-1">
+                      <VoteResults isListView proposal={proposal} />
+                    </div>
+                    <div className="border-r border-fgd-4 hidden lg:block" />
+                    <div className="w-full lg:w-auto flex-1">
+                      <ApprovalProgress
+                        progress={votesData.yesVoteProgress}
+                        votesRequired={votesData.yesVotesRequired}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <MultiChoiceVoteResults isListView proposal={proposal} />
+                )}
                 {votesData._programVersion !== undefined &&
                 // @asktree: here is some typescript gore because typescript doesn't know that a number being > 3 means it isn't 1 or 2
                 votesData._programVersion !== 1 &&
