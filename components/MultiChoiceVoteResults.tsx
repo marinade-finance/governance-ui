@@ -38,7 +38,7 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
         }
       })
       .sort((a, b) => (a.relativeVoteResult > b.relativeVoteResult ? -1 : 1))
-  }, [multiWeightVotes?.toString()])
+  }, [multiWeightVotes])
 
   const reducedOptions = useMemo(() => {
     if (options.length < 5) return options
