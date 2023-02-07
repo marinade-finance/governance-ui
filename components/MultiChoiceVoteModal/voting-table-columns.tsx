@@ -1,19 +1,34 @@
 import Input from '@components/inputs/Input'
 import { createColumnHelper } from '@tanstack/react-table'
 import type { ProposalOption } from '@solana/spl-governance'
+import { BN } from 'bn.js'
 
 const columnHelper = createColumnHelper<ProposalOption>()
 
 export const getColumns = (
   voteWeights: Record<string, number>,
   updateWeight: (optionId: string, updateValue: string) => void,
-  getRelativeVoteWeight: (optionId: string) => number
+  getRelativeVoteWeight: (optionId: string) => number,
+  currentVotes?: ProposalOption[]
 ) => [
-  columnHelper.accessor('label', { header: 'Option' }),
+  columnHelper.accessor('label', { header: 'Gauge name' }),
   columnHelper.accessor('label', {
-    id: 'currentWeight',
+    id: 'currentVotes',
+    header: 'Current votes %',
     cell: (info) => {
-      const relativeWeight = getRelativeVoteWeight(info.getValue())
+      const currentVote = currentVotes?.find((v) => v.label === info.getValue())
+      const totalWeight = currentVotes?.reduce(
+        (sum, current) => sum.add(current.voteWeight),
+        new BN(0)
+      )
+
+      const relativeWeight =
+        totalWeight?.gt(new BN(0)) && currentVote
+          ? currentVote.voteWeight
+              .mul(new BN(10000))
+              .div(totalWeight)
+              .toNumber() / 10000
+          : 0
       return (
         <div className="text-right">
           {relativeWeight !== 0 ? `${(relativeWeight * 100).toFixed(2)}%` : '-'}
@@ -51,15 +66,4 @@ export const getColumns = (
       )
     },
   }),
-  // columnHelper.accessor('relativeVoteResult', {
-  //   header: () => <div className="text-right">Global share</div>,
-  //   cell: (info) => {
-  //     const relativeWeight = info.getValue()
-  //     return (
-  //       <div className="text-right">
-  //         {relativeWeight !== 0 ? `${relativeWeight.toFixed(2)}%` : '-'}
-  //       </div>
-  //     )
-  //   },
-  // }),
 ]

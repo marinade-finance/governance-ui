@@ -148,8 +148,14 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   const [filteredOptions, setFilteredOptions] = useState(multiWeightVotes ?? [])
 
   const columns = useMemo(
-    () => getColumns(voteWeights, updateWeight, getRelativeVoteWeight),
-    [voteWeights, updateWeight, getRelativeVoteWeight]
+    () =>
+      getColumns(
+        voteWeights,
+        updateWeight,
+        getRelativeVoteWeight,
+        multiWeightVotes
+      ),
+    [voteWeights, updateWeight, getRelativeVoteWeight, multiWeightVotes]
   )
 
   const filterOptions = (searchString: string) => {
@@ -189,8 +195,8 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
             />
           </div>
         </div>
-        <div className="flex-grow mt-3 border border-fgd-4 p-4 md:py-8 md:px-12 rounded-lg overflow-y-auto">
-          <table>
+        <div className="flex-grow mt-3 overflow-y-auto">
+          <table className="w-full">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
