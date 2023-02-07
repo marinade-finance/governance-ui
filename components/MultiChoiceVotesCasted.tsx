@@ -3,16 +3,18 @@ import classNames from 'classnames'
 import useRealm from '@hooks/useRealm'
 import useProposalVotes from '@hooks/useProposalVotes'
 import { BN } from 'bn.js'
+import { Proposal } from '@solana/spl-governance'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { getMintMetadata } from './instructions/programs/splToken'
 
 interface Props {
   className?: string
+  proposal: Proposal
 }
 
 export default function MultiChoiceVotesCasted(props: Props) {
   const { realm, realmInfo } = useRealm()
-  const { multiWeightVotes } = useProposalVotes()
+  const { multiWeightVotes } = useProposalVotes(props.proposal)
 
   const votesCasted = multiWeightVotes
     ? multiWeightVotes.reduce(

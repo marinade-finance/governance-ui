@@ -32,7 +32,9 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
       .map((option) => {
         return {
           label: option.label,
-          relativeVoteResult: option.voteWeight.div(totalVotes).toNumber(),
+          relativeVoteResult:
+            option.voteWeight.mul(new BN(100000)).div(totalVotes).toNumber() /
+            100000,
         }
       })
       .sort((a, b) => (a.relativeVoteResult > b.relativeVoteResult ? -1 : 1))
@@ -59,7 +61,7 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
   }, [options])
 
   const votesExist = !!multiWeightVotes?.some((option) =>
-    option.voteWeight.lt(new BN(0))
+    option.voteWeight.gt(new BN(0))
   )
 
   return (
@@ -105,9 +107,14 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
                     ).toFixed(1)}%`}</p>
                   </div>
                   <div
-                    className={`mt-0.5 h-1 bg-sky-400 w-[${(
-                      option.relativeVoteResult * 100
-                    ).toLocaleString('en-US')}%]`}
+                    className={`mt-0.5 h-1 bg-sky-400 w-${
+                      option.relativeVoteResult
+                        ? `[${(option.relativeVoteResult * 100).toLocaleString(
+                            'en-US'
+                          )}%]`
+                        : '[1px]'
+                    }
+                    `}
                   />
                   <div className="my-3 h-[1px] w-full bg-neutral-700" />
                 </>

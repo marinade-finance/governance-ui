@@ -142,7 +142,7 @@ const Proposal = () => {
               )}
               {voteData.multiWeightVotes ? (
                 <>
-                  <MultiChoiceVotesCasted />
+                  <MultiChoiceVotesCasted proposal={proposal.account} />
                   <MultiChoiceVoteResults proposal={proposal.account} />
                 </>
               ) : (
