@@ -22,7 +22,7 @@ export const getColumns = (
     },
   }),
   columnHelper.accessor('label', {
-    id: 'currentWeight',
+    id: 'yourCurrentWeight',
     header: () => <div className="text-right">Your current share</div>,
     cell: (info) => {
       const relativeWeight = getRelativeVoteWeight(info.getValue())
