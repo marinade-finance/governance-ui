@@ -29,6 +29,7 @@ import NftProposalVoteState from 'NftVotePlugin/NftProposalVoteState'
 import ProposalWarnings from './ProposalWarnings'
 import MultiChoiceVotesCasted from '@components/MultiChoiceVotesCasted'
 import MultiChoiceVoteResults from '@components/MultiChoiceVoteResults'
+import MultiChoiceVotePanel from '@components/VotePanel/MultiChoiceVotePanel'
 
 const Proposal = () => {
   const { realmInfo, symbol } = useRealm()
@@ -196,7 +197,7 @@ const Proposal = () => {
             </div>
           </div>
         ) : null}
-        <VotePanel />
+        {voteData.multiWeightVotes ? <MultiChoiceVotePanel /> : <VotePanel />}
         <NftProposalVoteState proposal={proposal}></NftProposalVoteState>
         {proposal && currentWallet && showProposalExecution && (
           <ProposalExecutionCard />
