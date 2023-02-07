@@ -4,6 +4,7 @@ import Button from '../Button'
 import {
   useIsVoting,
   useProposalVoteRecordQuery,
+  useProposalVoteRecordQueryByTokenOwner,
   useVoterTokenRecord,
   useVotingPop,
 } from './hooks'
@@ -55,12 +56,14 @@ export const CastMultiChoiceVoteButton = () => {
 
   const [canVote, tooltipContent] = useCanVote()
   const votingPop = useVotingPop()
-  const { data: ownVoteRecord } = useProposalVoteRecordQuery('electoral')
+  const { data: ownVoteRecord } = useProposalVoteRecordQueryByTokenOwner(
+    voterTokenRecord?.pubkey
+  )
 
   const isVoteCast = !!ownVoteRecord?.found
   const isVoting = useIsVoting()
 
-  return isVoting && !isVoteCast ? (
+  return isVoting ? (
     <>
       <div className="bg-bkg-2 p-4 md:p-6 rounded-lg space-y-4">
         <div className="flex flex-col items-center justify-center">
@@ -74,7 +77,7 @@ export const CastMultiChoiceVoteButton = () => {
           }}
           disabled={!canVote}
         >
-          Cast your votes
+          {isVoteCast ? 'Change your votes' : 'Cast your votes'}
         </Button>
       </div>
       {showVoteModal && (
@@ -82,6 +85,7 @@ export const CastMultiChoiceVoteButton = () => {
           isOpen={showVoteModal}
           onClose={() => setShowVoteModal(false)}
           voterTokenRecord={voterTokenRecord!}
+          ownVoteRecord={ownVoteRecord?.result}
         />
       )}
     </>

@@ -1,5 +1,11 @@
 import React, { FunctionComponent, useMemo, useState } from 'react'
-import { RpcContext } from '@solana/spl-governance'
+import {
+  RpcContext,
+  Vote,
+  VoteKind,
+  VoteChoice,
+  getVoteRecordAddress,
+} from '@solana/spl-governance'
 import useWalletStore from '../../stores/useWalletStore'
 import useRealm from '../../hooks/useRealm'
 import { castVote } from '../../actions/castVote'
@@ -7,7 +13,7 @@ import { castVote } from '../../actions/castVote'
 import Button, { SecondaryButton } from '../Button'
 import Loading from '../Loading'
 import Modal from '../Modal'
-import { TokenOwnerRecord } from '@solana/spl-governance'
+import { TokenOwnerRecord, VoteRecord } from '@solana/spl-governance'
 import { ProgramAccount } from '@solana/spl-governance'
 import { getProgramVersionForRealm } from '@models/registry/api'
 import useVotePluginsClientStore from 'stores/useVotePluginsClientStore'
@@ -24,17 +30,21 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { TransactionInstruction } from '@solana/web3.js'
+import { relinquishVote } from 'actions/relinquishVote'
 
 interface MultiChoiceVoteModalProps {
   onClose: () => void
   isOpen: boolean
   voterTokenRecord: ProgramAccount<TokenOwnerRecord>
+  ownVoteRecord?: ProgramAccount<VoteRecord>
 }
 
 const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   onClose,
   isOpen,
   voterTokenRecord,
+  ownVoteRecord,
 }) => {
   const client = useVotePluginsClientStore(
     (s) => s.state.currentRealmVotingClient
@@ -44,7 +54,6 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   const connection = useWalletStore((s) => s.connection)
   const { proposal } = useWalletStore((s) => s.selectedProposal)
   const { multiWeightVotes } = useProposalVotes(proposal?.account)
-  const { fetchChatMessages } = useWalletStore((s) => s.actions)
   const { realm, realmInfo, config } = useRealm()
   const { refetchProposals } = useWalletStore((s) => s.actions)
   const { voteWeights, updateWeight, getRelativeVoteWeight } = useVoteWeights()
@@ -56,7 +65,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
     )
   const { closeNftVotingCountingModal } = useNftProposalStore.getState()
 
-  const submitVote = async () => {
+  const submitVotes = async () => {
     setSubmitting(true)
     const rpcContext = new RpcContext(
       proposal!.owner,
@@ -66,13 +75,28 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
       connection.endpoint
     )
 
+    const approveChoices = multiWeightVotes?.map(
+      (option) =>
+        new VoteChoice({
+          rank: 0,
+          weightPercentage: Math.round(
+            getRelativeVoteWeight(option.label) * 100
+          ),
+        })
+    )
+
     try {
       await castVote(
         rpcContext,
         realm!,
         proposal!,
         voterTokenRecord,
-        0,
+        new Vote({
+          voteType: VoteKind.Approve,
+          approveChoices,
+          deny: undefined,
+          veto: undefined,
+        }),
         undefined,
         client,
         refetchProposals
@@ -95,8 +119,43 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
       setSubmitting(false)
       onClose()
     }
+  }
 
-    fetchChatMessages(proposal!.pubkey)
+  const revokeVotes = async () => {
+    if (realm === undefined || proposal === undefined) return
+
+    setSubmitting(true)
+
+    const rpcContext = new RpcContext(
+      proposal!.owner,
+      getProgramVersionForRealm(realmInfo!),
+      wallet!,
+      connection.current,
+      connection.endpoint
+    )
+    try {
+      const instructions: TransactionInstruction[] = []
+
+      const ownVoteRecord = await getVoteRecordAddress(
+        realmInfo!.programId,
+        proposal.pubkey,
+        voterTokenRecord.pubkey
+      )
+
+      await relinquishVote(
+        rpcContext,
+        realm.pubkey,
+        proposal,
+        voterTokenRecord.pubkey,
+        ownVoteRecord,
+        instructions,
+        client
+      )
+      await refetchProposals()
+    } catch (ex) {
+      console.error("Can't relinquish vote", ex)
+    }
+    setSubmitting(false)
   }
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -200,9 +259,15 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
           </SecondaryButton>
           <Button
             className="w-44 flex items-center justify-center"
-            onClick={submitVote}
+            onClick={ownVoteRecord !== undefined ? revokeVotes : submitVotes}
           >
-            {submitting ? <Loading /> : <span>Submit votes</span>}
+            {submitting ? (
+              <Loading />
+            ) : (
+              <span>
+                {ownVoteRecord !== undefined ? 'Revoke votes' : 'Submit votes'}
+              </span>
+            )}
           </Button>
         </div>
       </div>

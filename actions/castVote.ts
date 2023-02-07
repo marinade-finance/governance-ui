@@ -47,8 +47,8 @@ export async function castVote(
   { connection, wallet, programId, walletPubkey }: RpcContext,
   realm: ProgramAccount<Realm>,
   proposal: ProgramAccount<Proposal>,
-  tokeOwnerRecord: ProgramAccount<TokenOwnerRecord>,
-  voteKind: VoteKind,
+  tokenOwnerRecord: ProgramAccount<TokenOwnerRecord>,
+  voteKind: VoteKind | Vote,
   message?: ChatMessageBody | undefined,
   votingPlugin?: VotingClient,
   runAfterConfirmation?: (() => void) | null
@@ -70,39 +70,46 @@ export async function castVote(
   const plugin = await votingPlugin?.withCastPluginVote(
     instructions,
     proposal,
-    tokeOwnerRecord
+    tokenOwnerRecord
   )
 
-  // It is not clear that defining these extraneous fields, `deny` and `veto`, is actually necessary.
-  // See:  https://discord.com/channels/910194960941338677/910630743510777926/1044741454175674378
-  const vote =
-    voteKind === VoteKind.Approve
-      ? new Vote({
-          voteType: VoteKind.Approve,
-          approveChoices: [new VoteChoice({ rank: 0, weightPercentage: 100 })],
-          deny: undefined,
-          veto: undefined,
-        })
-      : voteKind === VoteKind.Deny
-      ? new Vote({
-          voteType: VoteKind.Deny,
-          approveChoices: undefined,
-          deny: true,
-          veto: undefined,
-        })
-      : voteKind == VoteKind.Veto
-      ? new Vote({
-          voteType: VoteKind.Veto,
-          veto: true,
-          deny: undefined,
-          approveChoices: undefined,
-        })
-      : new Vote({
-          voteType: VoteKind.Abstain,
-          veto: undefined,
-          deny: undefined,
-          approveChoices: undefined,
-        })
+  let vote: Vote
+  if (voteKind instanceof Vote) {
+    vote = voteKind
+  } else {
+    // It is not clear that defining these extraneous fields, `deny` and `veto`, is actually necessary.
+    // See:  https://discord.com/channels/910194960941338677/910630743510777926/1044741454175674378
+    vote =
+      voteKind === VoteKind.Approve
+        ? new Vote({
+            voteType: VoteKind.Approve,
+            approveChoices: [
+              new VoteChoice({ rank: 0, weightPercentage: 100 }),
+            ],
+            deny: undefined,
+            veto: undefined,
+          })
+        : voteKind === VoteKind.Deny
+        ? new Vote({
+            voteType: VoteKind.Deny,
+            approveChoices: undefined,
+            deny: true,
+            veto: undefined,
+          })
+        : voteKind == VoteKind.Veto
+        ? new Vote({
+            voteType: VoteKind.Veto,
+            veto: true,
+            deny: undefined,
+            approveChoices: undefined,
+          })
+        : new Vote({
+            voteType: VoteKind.Abstain,
+            veto: undefined,
+            deny: undefined,
+            approveChoices: undefined,
+          })
+  }
 
   const tokenMint =
     voteKind === VoteKind.Veto
@@ -117,7 +124,7 @@ export async function castVote(
     proposal.account.governance,
     proposal.pubkey,
     proposal.account.tokenOwnerRecord,
-    tokeOwnerRecord.pubkey,
+    tokenOwnerRecord.pubkey,
     governanceAuthority,
     tokenMint,
     vote,
@@ -129,7 +136,7 @@ export async function castVote(
   if (message) {
     const plugin = await votingPlugin?.withUpdateVoterWeightRecord(
       instructions,
-      tokeOwnerRecord,
+      tokenOwnerRecord,
       'commentProposal'
     )
     await withPostChatMessage(
@@ -140,7 +147,7 @@ export async function castVote(
       realm.pubkey,
       proposal.account.governance,
       proposal.pubkey,
-      tokeOwnerRecord.pubkey,
+      tokenOwnerRecord.pubkey,
       governanceAuthority,
       payer,
       undefined,
