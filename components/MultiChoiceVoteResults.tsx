@@ -38,7 +38,7 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
         }
       })
       .sort((a, b) => (a.relativeVoteResult > b.relativeVoteResult ? -1 : 1))
-  }, [multiWeightVotes])
+  }, [multiWeightVotes?.toString()])
 
   const reducedOptions = useMemo(() => {
     if (options.length < 5) return options
@@ -106,16 +106,15 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
                       option.relativeVoteResult * 100
                     ).toFixed(1)}%`}</p>
                   </div>
-                  <div
-                    className={`mt-0.5 h-1 bg-sky-400 w-${
-                      option.relativeVoteResult
-                        ? `[${(option.relativeVoteResult * 100).toLocaleString(
-                            'en-US'
-                          )}%]`
-                        : '[1px]'
-                    }
-                    `}
-                  />
+                  <div className="w-full flex">
+                    <div className="mt-0.5 h-1 bg-sky-400 w-[1px]" />
+                    <div
+                      className="mt-0.5 h-1 bg-sky-400"
+                      style={{
+                        width: `${option.relativeVoteResult * 100}%`,
+                      }}
+                    />
+                  </div>
                   <div className="my-3 h-[1px] w-full bg-neutral-700" />
                 </>
               ))}
