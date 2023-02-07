@@ -1,11 +1,5 @@
 import React, { FunctionComponent, useMemo, useState } from 'react'
-import {
-  RpcContext,
-  Vote,
-  VoteKind,
-  VoteChoice,
-  getVoteRecordAddress,
-} from '@solana/spl-governance'
+import { RpcContext, getVoteRecordAddress } from '@solana/spl-governance'
 import useWalletStore from '../../stores/useWalletStore'
 import useRealm from '../../hooks/useRealm'
 import { castVote } from '../../actions/castVote'
@@ -31,7 +25,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { TransactionInstruction } from '@solana/web3.js'
-import { relinquishVote } from 'actions/relinquishVote'
+import { relinquishAndVote } from 'actions/relinquishAndVote'
 
 interface MultiChoiceVoteModalProps {
   onClose: () => void
@@ -56,7 +50,12 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   const { multiWeightVotes } = useProposalVotes(proposal?.account)
   const { realm, realmInfo, config } = useRealm()
   const { refetchProposals } = useWalletStore((s) => s.actions)
-  const { voteWeights, updateWeight, getRelativeVoteWeight } = useVoteWeights()
+  const {
+    voteWeights,
+    updateWeight,
+    getRelativeVoteWeight,
+    getVotes,
+  } = useVoteWeights()
 
   const isNftPlugin =
     config?.account.communityTokenConfig.voterWeightAddin &&
@@ -75,31 +74,19 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
       connection.endpoint
     )
 
-    const approveChoices = multiWeightVotes?.map(
-      (option) =>
-        new VoteChoice({
-          rank: 0,
-          weightPercentage: Math.round(
-            getRelativeVoteWeight(option.label) * 100
-          ),
-        })
-    )
-
     try {
       await castVote(
         rpcContext,
         realm!,
         proposal!,
         voterTokenRecord,
-        new Vote({
-          voteType: VoteKind.Approve,
-          approveChoices,
-          deny: undefined,
-          veto: undefined,
-        }),
+        getVotes(multiWeightVotes),
         undefined,
         client,
-        refetchProposals
+        () => {
+          refetchProposals()
+          onClose()
+        }
       )
       if (!isNftPlugin) {
         await refetchProposals()
@@ -114,10 +101,8 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
       }
       //TODO: How do we present transaction errors to users? Just the notification?
       console.error("Can't cast vote", ex)
-      onClose()
     } finally {
       setSubmitting(false)
-      onClose()
     }
   }
 
@@ -142,12 +127,13 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
         voterTokenRecord.pubkey
       )
 
-      await relinquishVote(
+      await relinquishAndVote(
         rpcContext,
         realm.pubkey,
         proposal,
-        voterTokenRecord.pubkey,
+        voterTokenRecord,
         ownVoteRecord,
+        getVotes(multiWeightVotes),
         instructions,
         client
       )

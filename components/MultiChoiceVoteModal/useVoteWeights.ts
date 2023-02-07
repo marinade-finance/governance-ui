@@ -1,4 +1,10 @@
 import { useEffect, useState } from 'react'
+import {
+  ProposalOption,
+  Vote,
+  VoteChoice,
+  VoteKind,
+} from '@solana/spl-governance'
 
 export const useVoteWeights = () => {
   const [voteWeights, setVoteWeights] = useState<Record<string, number>>({})
@@ -26,8 +32,31 @@ export const useVoteWeights = () => {
       return 0
     }
 
-    return voteWeights[optionId] / totalVoteWeight
+    return (
+      Math.round(
+        (voteWeights[optionId] / totalVoteWeight + Number.EPSILON) * 100
+      ) / 100
+    )
   }
 
-  return { voteWeights, updateWeight, getRelativeVoteWeight }
+  const getVotes = (options?: ProposalOption[]) => {
+    const approveChoices = options?.map(
+      (option) =>
+        new VoteChoice({
+          rank: 0,
+          weightPercentage: Math.round(
+            getRelativeVoteWeight(option.label) * 100
+          ),
+        })
+    )
+
+    return new Vote({
+      voteType: VoteKind.Approve,
+      approveChoices,
+      deny: undefined,
+      veto: undefined,
+    })
+  }
+
+  return { voteWeights, updateWeight, getRelativeVoteWeight, getVotes }
 }
