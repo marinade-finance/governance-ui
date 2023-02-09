@@ -80,14 +80,12 @@ export const CastMultiChoiceVoteButton = () => {
           {isVoteCast ? 'Change your votes' : 'Cast your votes'}
         </Button>
       </div>
-      {showVoteModal && (
-        <MultiChoiceVoteModal
-          isOpen={showVoteModal}
-          onClose={() => setShowVoteModal(false)}
-          voterTokenRecord={voterTokenRecord!}
-          ownVoteRecord={ownVoteRecord?.result}
-        />
-      )}
+      <MultiChoiceVoteModal
+        isOpen={showVoteModal}
+        onOpenChange={setShowVoteModal}
+        voterTokenRecord={voterTokenRecord!}
+        ownVoteRecord={ownVoteRecord?.result}
+      />
     </>
   ) : null
 }

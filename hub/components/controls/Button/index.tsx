@@ -4,3 +4,4 @@ export { Secondary } from './Secondary';
 export { SecondaryAlt } from './SecondaryAlt';
 export { SecondaryRed } from './SecondaryRed';
 export { Tertiary } from './Tertiary';
+export { Borderless } from './Borderless';

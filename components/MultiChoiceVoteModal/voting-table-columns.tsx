@@ -3,6 +3,8 @@ import { createColumnHelper } from '@tanstack/react-table'
 import type { ProposalOption } from '@solana/spl-governance'
 import { BN } from 'bn.js'
 
+const headerStyle = 'text-xs text-neutral-500 font-normal'
+
 const columnHelper = createColumnHelper<ProposalOption>()
 
 export const getColumns = (
@@ -11,10 +13,15 @@ export const getColumns = (
   getRelativeVoteWeight: (optionId: string) => number,
   currentVotes?: ProposalOption[]
 ) => [
-  columnHelper.accessor('label', { header: 'Gauge name' }),
+  columnHelper.accessor('label', {
+    header: () => <span className={headerStyle}>Gauge name</span>,
+    cell: (info) => (
+      <span className="text-white text-base font-bold">{info.getValue()}</span>
+    ),
+  }),
   columnHelper.accessor('label', {
     id: 'currentVotes',
-    header: 'Current votes %',
+    header: () => <span className={headerStyle}>Current votes %</span>,
     cell: (info) => {
       const currentVote = currentVotes?.find((v) => v.label === info.getValue())
       const totalWeight = currentVotes?.reduce(
@@ -30,39 +37,43 @@ export const getColumns = (
               .toNumber() / 10000
           : 0
       return (
-        <div className="text-right">
-          {relativeWeight !== 0 ? `${(relativeWeight * 100).toFixed(2)}%` : '-'}
+        <div className="flex text-white text-sm items-center">
+          <span className="w-16">{`${(relativeWeight * 100).toFixed(
+            2
+          )}%`}</span>
+          <div
+            className="h-1 bg-sky-400"
+            style={{ width: `${1 + Math.round(relativeWeight * 100)}px` }}
+          />
         </div>
       )
     },
   }),
   columnHelper.accessor('label', {
     id: 'yourCurrentWeight',
-    header: () => <div className="text-right">Your current share</div>,
-    cell: (info) => {
-      const relativeWeight = getRelativeVoteWeight(info.getValue())
-      return (
-        <div className="text-right">
-          {relativeWeight !== 0 ? `${(relativeWeight * 100).toFixed(2)}%` : '-'}
-        </div>
-      )
-    },
-  }),
-  columnHelper.accessor('label', {
-    id: 'voteWeight',
-    header: () => <div className="text-center">Vote weight</div>,
+    header: () => (
+      <>
+        <span className="text-xs text-white font-normal">Your votes </span>
+        <span className={headerStyle}>%</span>
+      </>
+    ),
     cell: (info) => {
       const optionId = info.getValue()
+      const relativeWeight = getRelativeVoteWeight(optionId)
       return (
-        <Input
-          type="text"
-          key={optionId}
-          value={voteWeights[optionId]}
-          className="max-w-[120px] self-center"
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            updateWeight(optionId, e.target.value)
-          }
-        />
+        <div className="flex gap-2 items-center w-[150px]" key={optionId}>
+          <Input
+            type="text"
+            value={voteWeights[optionId]}
+            className="border-neutral-700 placeholder-neutral-500 w-[130px]"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              updateWeight(optionId, e.target.value)
+            }
+          />
+          <span className="text-sm text-neutral-500">
+            {relativeWeight ? `${(relativeWeight * 100).toFixed(2)}%` : ''}
+          </span>
+        </div>
       )
     },
   }),

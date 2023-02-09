@@ -4,9 +4,6 @@ import useWalletStore from '../../stores/useWalletStore'
 import useRealm from '../../hooks/useRealm'
 import { castVote } from '../../actions/castVote'
 
-import Button, { SecondaryButton } from '../Button'
-import Loading from '../Loading'
-import Modal from '../Modal'
 import { TokenOwnerRecord, VoteRecord } from '@solana/spl-governance'
 import { ProgramAccount } from '@solana/spl-governance'
 import { getProgramVersionForRealm } from '@models/registry/api'
@@ -25,17 +22,24 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { TransactionInstruction } from '@solana/web3.js'
+import { relinquishVote } from 'actions/relinquishVote'
 import { relinquishAndVote } from 'actions/relinquishAndVote'
 
+import * as Button from '@hub/components/controls/Button'
+import * as Modal from '@hub/components/controls/Modal'
+import DocumentTasks from '@carbon/icons-react/lib/DocumentTasks'
+import Events from '@carbon/icons-react/lib/Events'
+import Launch from '@carbon/icons-react/lib/Launch'
+
 interface MultiChoiceVoteModalProps {
-  onClose: () => void
+  onOpenChange: (open: boolean) => void
   isOpen: boolean
   voterTokenRecord: ProgramAccount<TokenOwnerRecord>
   ownVoteRecord?: ProgramAccount<VoteRecord>
 }
 
 const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
-  onClose,
+  onOpenChange,
   isOpen,
   voterTokenRecord,
   ownVoteRecord,
@@ -44,6 +48,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
     (s) => s.state.currentRealmVotingClient
   )
   const [submitting, setSubmitting] = useState(false)
+  const [revoking, setRevoking] = useState(false)
   const wallet = useWalletStore((s) => s.current)
   const connection = useWalletStore((s) => s.connection)
   const { proposal } = useWalletStore((s) => s.selectedProposal)
@@ -85,7 +90,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
         client,
         () => {
           refetchProposals()
-          onClose()
+          onOpenChange(false)
         }
       )
       if (!isNftPlugin) {
@@ -106,7 +111,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
     }
   }
 
-  const revokeVotes = async () => {
+  const submitRevotes = async () => {
     if (realm === undefined || proposal === undefined) return
 
     setSubmitting(true)
@@ -144,6 +149,43 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
     setSubmitting(false)
   }
 
+  const resetVotes = async () => {
+    if (realm === undefined || proposal === undefined) return
+
+    setRevoking(true)
+
+    const rpcContext = new RpcContext(
+      proposal!.owner,
+      getProgramVersionForRealm(realmInfo!),
+      wallet!,
+      connection.current,
+      connection.endpoint
+    )
+    try {
+      const instructions: TransactionInstruction[] = []
+
+      const ownVoteRecord = await getVoteRecordAddress(
+        realmInfo!.programId,
+        proposal.pubkey,
+        voterTokenRecord.pubkey
+      )
+
+      await relinquishVote(
+        rpcContext,
+        realm.pubkey,
+        proposal,
+        voterTokenRecord.pubkey,
+        ownVoteRecord,
+        instructions,
+        client
+      )
+      await refetchProposals()
+    } catch (ex) {
+      console.error("Can't relinquish vote", ex)
+    }
+    setRevoking(false)
+  }
+
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredOptions, setFilteredOptions] = useState(multiWeightVotes ?? [])
 
@@ -176,78 +218,101 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   })
 
   return (
-    <Modal
-      onClose={onClose}
-      isOpen={isOpen}
-      sizeClassName="max-w-4xl w-full h-[800px] max-h-screen"
-    >
-      <div className="h-full flex flex-col">
-        <h2>Cast your votes</h2>
-        <div className="flex justify-end mt-5">
-          <div>
-            <Input
-              className="pl-8 w-[300px]"
-              value={searchTerm}
-              type="text"
-              onChange={(e) => filterOptions(e.target.value)}
-              placeholder="Search options..."
-              prefix={<SearchIcon className="w-5 h-5 text-fgd-3" />}
-            />
-          </div>
-        </div>
-        <div className="flex-grow mt-3 overflow-y-auto">
-          <table className="w-full">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
+    <Modal.Root open={isOpen} onOpenChange={onOpenChange}>
+      <Modal.Portal>
+        <Modal.Overlay>
+          <Modal.Content className="flex flex-col w-full max-w-4xl mx-10 max-h-[70vh]">
+            <Modal.Close />
+            <div className="p-8 pb-6 border-b border-neutral-700">
+              <div className="flex gap-2 text-neutral-500">
+                <Events />
+                <h2 className="text-xs">CAST YOUR COMMUNITY VOTES</h2>
+              </div>
+              <p className="text-sm mt-2">
+                sapien faucibus et molestie ac feugiat sed lectus vestibulum
+                mattis ullamcorper velit sed ullamcorper...
+              </p>
+            </div>
+            <div className="px-8 mt-5">
+              <div className="flex gap-4">
+                <Input
+                  className="pl-8 border-neutral-700 placeholder-neutral-500"
+                  value={searchTerm}
+                  type="text"
+                  onChange={(e) => filterOptions(e.target.value)}
+                  placeholder="Search gauges"
+                  prefix={<SearchIcon className="w-5 h-5 text-neutral-500" />}
+                  noMaxWidth
+                />
+                <Button.Borderless className="w-52">
+                  Request a Gauge <Launch className="ml-2" />
+                </Button.Borderless>
+              </div>
+            </div>
+            <div className="flex flex-grow mt-8 overflow-y-auto">
+              <table className="flex-grow mx-8">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <th
+                          key={header.id}
+                          className="pb-6 text-left border-b border-neutral-700"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="py-2.5 border-b border-neutral-700"
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
                           )}
-                    </th>
+                        </td>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex items-center justify-center mt-8">
-          <SecondaryButton className="w-44 mr-4" onClick={onClose}>
-            Cancel
-          </SecondaryButton>
-          <Button
-            className="w-44 flex items-center justify-center"
-            onClick={ownVoteRecord !== undefined ? revokeVotes : submitVotes}
-          >
-            {submitting ? (
-              <Loading />
-            ) : (
-              <span>
-                {ownVoteRecord !== undefined ? 'Revoke votes' : 'Submit votes'}
-              </span>
-            )}
-          </Button>
-        </div>
-      </div>
-    </Modal>
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end gap-2 p-8">
+              <Button.Borderless
+                className="px-9"
+                disabled={ownVoteRecord === undefined}
+                onClick={resetVotes}
+                pending={revoking}
+              >
+                Reset Votes
+              </Button.Borderless>
+              <Button.Primary
+                className="text-black px-9"
+                onClick={
+                  ownVoteRecord !== undefined ? submitRevotes : submitVotes
+                }
+                pending={submitting}
+              >
+                <DocumentTasks className="mr-2" />
+                {ownVoteRecord !== undefined ? 'Overide Votes' : 'Submit Votes'}
+              </Button.Primary>
+            </div>
+          </Modal.Content>
+        </Modal.Overlay>
+      </Modal.Portal>
+    </Modal.Root>
   )
 }
 
