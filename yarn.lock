@@ -2189,7 +2189,7 @@
     "@marinade.finance/spl-governance" "^0.3.20"
     "@saberhq/solana-contrib" "^1.14.9"
 
-"@marinade.finance/spl-governance@^0.3.20", "@solana/spl-governance@npm:@marinade.finance/spl-governance@0.3.20":
+"@marinade.finance/spl-governance@^0.3.20":
   version "0.3.20"
   resolved "https://registry.yarnpkg.com/@marinade.finance/spl-governance/-/spl-governance-0.3.20.tgz#dbabb5859afb76e32fa73b065bc7f75b4fcb00e6"
   integrity sha512-8IQjNtVuHHKKO5VHDXHf5kl7WFbdYMmZWGVL4Xw/0lqXldHoYVAs4apx1GCAMpYprYaiKjcucCJKj4d+xEq69Q==
@@ -4491,6 +4491,19 @@
   integrity sha512-tZppBiiVkUa5v+B/Ds+TqZ4yxR/vaIYLRxBk7x6R22dwk4/9SU87bVE60kRdDqTdMzqScFxIMdhaGl/fCX533A==
   dependencies:
     "@solana/web3.js" "^1.22.0"
+    bignumber.js "^9.0.1"
+    bn.js "^5.1.3"
+    borsh "^0.3.1"
+    bs58 "^4.0.1"
+    superstruct "^0.15.2"
+
+"@solana/spl-governance@npm:@marinade.finance/spl-governance@0.3.25":
+  version "0.3.25"
+  resolved "https://registry.yarnpkg.com/@marinade.finance/spl-governance/-/spl-governance-0.3.25.tgz#5632a22728ffe7e31b2c51f501f404243db830b3"
+  integrity sha512-0bjLRKHr3MQERwyCITiZ2kJnH59oXGQPqPrrsHSG+x0X59vv08XcFCb+h4jxeaKwDRVP6zfg/oU/vqq+aequgQ==
+  dependencies:
+    "@solana/web3.js" "^1.22.0"
+    axios "^1.1.3"
     bignumber.js "^9.0.1"
     bn.js "^5.1.3"
     borsh "^0.3.1"
