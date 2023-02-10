@@ -62,6 +62,14 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
     option.voteWeight.gt(new BN(0))
   )
 
+  const heightestRelativeVote = reducedOptions.reduce(
+    (highest, current) =>
+      highest > current.relativeVoteResult
+        ? highest
+        : current.relativeVoteResult,
+    0
+  )
+
   return (
     <div className="w-full flex items-center space-x-4">
       {proposal ? (
@@ -76,14 +84,23 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
                   }`}
                   key={option.label}
                 >
-                  <span className="flex-grow truncate font-bold text-base">
+                  <span
+                    className={`flex-grow truncate ${
+                      index !== reducedOptions.length - 1 ? 'font-bold' : ''
+                    } text-base`}
+                  >
                     {option.label}
                   </span>
                   <div className="flex gap-2 items-center">
-                    <p className="text-sm font-medium">{`${(
+                    <p className="text-sm font-medium w-14 text-right">{`${(
                       option.relativeVoteResult * 100
                     ).toFixed(1)}%`}</p>
-                    <div className="w-full flex">
+                    <div
+                      className="flex"
+                      style={{
+                        width: `${Math.round(heightestRelativeVote * 100)}px`,
+                      }}
+                    >
                       <div className="h-1 bg-sky-400 w-[1px]" />
                       <div
                         className="h-1 bg-sky-400"
