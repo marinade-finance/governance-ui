@@ -21,6 +21,7 @@ import useNftPluginStore from 'NftVotePlugin/store/nftPluginStore'
 import useVotePluginsClientStore from 'stores/useVotePluginsClientStore'
 import dayjs from 'dayjs'
 import { diffTime } from './ProposalRemainingVotingTime'
+import useCrewsPluginStore from 'CrewsVotePlugin/store/crewsPluginStore'
 
 const ProposalActionsPanel = () => {
   const { governance, proposal, proposalOwner } = useWalletStore(
@@ -39,7 +40,11 @@ const ProposalActionsPanel = () => {
   const votePLuginsClientMaxVoterWeight = useVotePluginsClientStore(
     (s) => s.state.maxVoterWeight
   )
-  const maxVoterWeight = nftMaxVoterWeight || votePLuginsClientMaxVoterWeight
+  const crewsMaxVoterWeight = useCrewsPluginStore(
+    (s) => s.state.currentMaxVoterPublicKey
+  )
+  const maxVoterWeight =
+    crewsMaxVoterWeight || nftMaxVoterWeight || votePLuginsClientMaxVoterWeight
   const canFinalizeVote =
     hasVoteTimeExpired && proposal?.account.state === ProposalState.Voting
   const now = new Date().getTime() / 1000 // unix timestamp in seconds

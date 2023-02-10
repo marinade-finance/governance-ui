@@ -9,6 +9,7 @@ import {
   nftPluginsPks,
   vsrPluginsPks,
   switchboardPluginsPks,
+  crewsPluginPks,
 } from '@hooks/useVotingPlugins'
 import GatewayCard from '@components/Gateway/GatewayCard'
 import ClaimUnreleasedNFTs from './ClaimUnreleasedNFTs'
@@ -16,6 +17,7 @@ import Link from 'next/link'
 import { getTokenOwnerRecordAddress } from '@solana/spl-governance'
 import useWalletStore from 'stores/useWalletStore'
 import { useEffect, useState } from 'react'
+import { PublicKey } from '@solana/web3.js'
 
 const LockPluginTokenBalanceCard = dynamic(
   () =>
@@ -31,28 +33,39 @@ const NftVotingPower = dynamic(
 const SwitchboardPermissionCard = dynamic(
   () => import('./SwitchboardPermissionCard')
 )
+const CrewsVotingPower = dynamic(
+  () => import('@components/ProposalVotingPower/CrewsVotingPower')
+)
 
-const GovernancePowerTitle = () => {
+interface GovernancePowerTitleProps {
+  linkToOwnerRecord?: boolean
+}
+
+const GovernancePowerTitle = ({
+  linkToOwnerRecord = true,
+}: GovernancePowerTitleProps) => {
   const { councilMint, mint, realm, symbol } = useRealm()
-  const [tokenOwnerRecordPk, setTokenOwneRecordPk] = useState('')
+  const [tokenOwnerRecordPk, setTokenOwnerRecordPk] = useState('')
   const { fmtUrlWithCluster } = useQueryContext()
   const wallet = useWalletStore((s) => s.current)
   const connected = useWalletStore((s) => s.connected)
 
   useEffect(() => {
     const getTokenOwnerRecord = async () => {
-      const defaultMint = !mint?.supply.isZero()
-        ? realm!.account.communityMint
-        : !councilMint?.supply.isZero()
-        ? realm!.account.config.councilMint
-        : undefined
-      const tokenOwnerRecordAddress = await getTokenOwnerRecordAddress(
-        realm!.owner,
-        realm!.pubkey,
-        defaultMint!,
-        wallet!.publicKey!
-      )
-      setTokenOwneRecordPk(tokenOwnerRecordAddress.toBase58())
+      if (realm && wallet) {
+        const defaultMint = !mint?.supply.isZero()
+          ? realm.account.communityMint
+          : !councilMint?.supply.isZero()
+          ? realm.account.config.councilMint
+          : undefined
+        const tokenOwnerRecordAddress = await getTokenOwnerRecordAddress(
+          realm.owner ?? PublicKey.default,
+          realm.pubkey ?? PublicKey.default,
+          defaultMint! ?? PublicKey.default,
+          wallet.publicKey!
+        )
+        setTokenOwnerRecordPk(tokenOwnerRecordAddress.toBase58())
+      }
     }
     if (realm && wallet?.connected) {
       getTokenOwnerRecord()
@@ -62,20 +75,24 @@ const GovernancePowerTitle = () => {
   return (
     <div className="flex items-center justify-between mb-4">
       <h3 className="mb-0">My governance power</h3>
-      <Link
-        href={fmtUrlWithCluster(`/dao/${symbol}/account/${tokenOwnerRecordPk}`)}
-      >
-        <a
-          className={`default-transition flex items-center text-fgd-2 text-sm transition-all hover:text-fgd-3 ${
-            !connected || !tokenOwnerRecordPk
-              ? 'opacity-50 pointer-events-none'
-              : ''
-          }`}
+      {linkToOwnerRecord ? (
+        <Link
+          href={fmtUrlWithCluster(
+            `/dao/${symbol}/account/${tokenOwnerRecordPk}`
+          )}
         >
-          View
-          <ChevronRightIcon className="flex-shrink-0 w-6 h-6" />
-        </a>
-      </Link>
+          <a
+            className={`default-transition flex items-center text-fgd-2 text-sm transition-all hover:text-fgd-3 ${
+              !connected || !tokenOwnerRecordPk
+                ? 'opacity-50 pointer-events-none'
+                : ''
+            }`}
+          >
+            View
+            <ChevronRightIcon className="flex-shrink-0 w-6 h-6" />
+          </a>
+        </Link>
+      ) : undefined}
     </div>
   )
 }
@@ -100,6 +117,8 @@ const TokenBalanceCardWrapper = ({
       currentPluginPk && vsrPluginsPks.includes(currentPluginPk?.toBase58())
     const isNftMode =
       currentPluginPk && nftPluginsPks.includes(currentPluginPk?.toBase58())
+    const isCrewsMode =
+      currentPluginPk && crewsPluginPks.includes(currentPluginPk?.toBase58())
     const isGatewayMode =
       currentPluginPk && gatewayPluginsPks.includes(currentPluginPk?.toBase58())
     const isSwitchboardMode =
@@ -144,6 +163,20 @@ const TokenBalanceCardWrapper = ({
               <ClaimUnreleasedNFTs inAccountDetails={inAccountDetails} />
             </>
           )}
+        </>
+      )
+    }
+    if (
+      isCrewsMode &&
+      (!ownTokenRecord ||
+        ownTokenRecord.account.governingTokenDepositAmount.isZero())
+    ) {
+      return (
+        <>
+          {!inAccountDetails && (
+            <GovernancePowerTitle linkToOwnerRecord={false} />
+          )}
+          <CrewsVotingPower />
         </>
       )
     }

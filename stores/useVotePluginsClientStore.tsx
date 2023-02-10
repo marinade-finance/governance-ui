@@ -16,12 +16,15 @@ import { PythClient } from 'pyth-staking-api'
 import { PublicKey } from '@solana/web3.js'
 import { tryGetGatewayRegistrar } from '../GatewayPlugin/sdk/api'
 import { VsrClient } from 'VoteStakeRegistry/sdk/client'
+import { RootWrapper as CrewsVoterClient } from '@marinade.finance/sg-crews-sdk'
+import { createCrewsClient } from 'CrewsVotePlugin/sdk/crews'
 
 interface UseVotePluginsClientStore extends State {
   state: {
     //diffrent plugins to choose because we will still have functions related only to one plugin
     vsrClient: VsrClient | undefined
     nftClient: NftVoterClient | undefined
+    crewsClient: CrewsVoterClient | undefined
     gatewayClient: GatewayClient | undefined
     switchboardClient: SwitchboardQueueVoterClient | undefined
     pythClient: PythClient | undefined
@@ -40,6 +43,11 @@ interface UseVotePluginsClientStore extends State {
   handleSetNftClient: (
     wallet: SignerWalletAdapter | undefined,
     connection: ConnectionContext
+  ) => void
+  handleSetCrewsClient: (
+    wallet: SignerWalletAdapter | undefined,
+    connection: ConnectionContext,
+    realm: PublicKey
   ) => void
   handleSetSwitchboardClient: (
     wallet: SignerWalletAdapter | undefined,
@@ -75,6 +83,7 @@ interface UseVotePluginsClientStore extends State {
 const defaultState = {
   vsrClient: undefined,
   nftClient: undefined,
+  crewsClient: undefined,
   gatewayClient: undefined,
   switchboardClient: undefined,
   pythClient: undefined,
@@ -137,6 +146,16 @@ const useVotePluginsClientStore = create<UseVotePluginsClientStore>(
       )
       set((s) => {
         s.state.nftClient = nftClient
+      })
+    },
+    handleSetCrewsClient: async (wallet, connection, realm) => {
+      const crewsClient = await createCrewsClient(
+        connection.current,
+        (wallet as unknown) as Wallet,
+        realm
+      )
+      set((s) => {
+        s.state.crewsClient = crewsClient
       })
     },
     handleSetNftRegistrar: async (client, realm) => {

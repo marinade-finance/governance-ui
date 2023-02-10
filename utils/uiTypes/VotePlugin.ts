@@ -36,6 +36,12 @@ import {
   getNftVoteRecordProgramAddress,
   getUsedNftsForProposal,
 } from 'NftVotePlugin/accounts'
+import { RootWrapper as CrewsClient } from '@marinade.finance/sg-crews-sdk'
+import {
+  getCrewsMaxVoterWeightAddress,
+  getCrewsVoterWeightRecordAddress,
+} from 'CrewsVotePlugin/sdk/accounts'
+import { findCrewByTokenOwnerRecord } from 'CrewsVotePlugin/sdk/crews'
 
 type UpdateVoterWeightRecordTypes =
   | 'castVote'
@@ -61,6 +67,7 @@ export enum VotingClientType {
   SwitchboardVoterClient,
   PythClient,
   GatewayClient,
+  CrewsClient,
 }
 
 class AccountData {
@@ -89,6 +96,7 @@ export type Client =
   | SwitchboardQueueVoterClient
   | PythClient
   | GatewayClient
+  | CrewsClient
 
 //Abstract for common functions that plugins will implement
 export class VotingClient {
@@ -126,12 +134,12 @@ export class VotingClient {
       this.clientType = VotingClientType.GatewayClient
       this.noClient = false
     }
-    if (this.client instanceof GatewayClient) {
-      this.clientType = VotingClientType.GatewayClient
-      this.noClient = false
-    }
     if (this.client instanceof PythClient) {
       this.clientType = VotingClientType.PythClient
+      this.noClient = false
+    }
+    if (this.client instanceof CrewsClient) {
+      this.clientType = VotingClientType.CrewsClient
       this.noClient = false
     }
   }
@@ -262,11 +270,26 @@ export class VotingClient {
       )
       return { voterWeightPk: vwr, maxVoterWeightRecord: undefined }
     }
+    if (this.client instanceof CrewsClient) {
+      const crew = await findCrewByTokenOwnerRecord(
+        tokenOwnerRecord.pubkey,
+        this.client.sdk
+      )
+
+      const voterWeightRecord = getCrewsVoterWeightRecordAddress(
+        this.client.sdk,
+        crew?.address
+      )
+      return {
+        voterWeightPk: voterWeightRecord,
+        maxVoterWeightRecord: undefined,
+      }
+    }
   }
   withCastPluginVote = async (
     instructions: TransactionInstruction[],
     proposal: ProgramAccount<Proposal>,
-    tokeOwnerRecord: ProgramAccount<TokenOwnerRecord>
+    tokenOwnerRecord: ProgramAccount<TokenOwnerRecord>
   ): Promise<ProgramAddresses | undefined> => {
     if (this.noClient) {
       return
@@ -364,7 +387,7 @@ export class VotingClient {
     if (this.client instanceof VsrClient) {
       const props = await this.withUpdateVoterWeightRecord(
         instructions,
-        tokeOwnerRecord,
+        tokenOwnerRecord,
         'castVote'
       )
       return props
@@ -372,7 +395,7 @@ export class VotingClient {
     if (this.client instanceof SwitchboardQueueVoterClient) {
       const props = await this.withUpdateVoterWeightRecord(
         instructions,
-        tokeOwnerRecord,
+        tokenOwnerRecord,
         'castVote'
       )
       return props
@@ -380,7 +403,7 @@ export class VotingClient {
     if (this.client instanceof PythClient) {
       const props = await this.withUpdateVoterWeightRecord(
         instructions,
-        tokeOwnerRecord,
+        tokenOwnerRecord,
         'castVote',
         proposal.pubkey
       )
@@ -406,6 +429,26 @@ export class VotingClient {
       )
 
       return { voterWeightPk, maxVoterWeightRecord: undefined }
+    }
+    if (this.client instanceof CrewsClient) {
+      const crew = await findCrewByTokenOwnerRecord(
+        tokenOwnerRecord.pubkey,
+        this.client.sdk
+      )
+
+      const voterWeightRecord = getCrewsVoterWeightRecordAddress(
+        this.client.sdk,
+        crew?.address
+      )
+      const maxVoterWeightRecord = getCrewsMaxVoterWeightAddress(
+        this.client.sdk,
+        crew?.root.address
+      )
+
+      return {
+        voterWeightPk: voterWeightRecord,
+        maxVoterWeightRecord,
+      }
     }
   }
   withRelinquishVote = async (
