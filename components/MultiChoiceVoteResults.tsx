@@ -1,12 +1,9 @@
 import { Proposal } from '@solana/spl-governance'
 import useProposalVotes from '@hooks/useProposalVotes'
-import MultiChoiceVoteResultsBar from './MultiChoiceVoteResultBar'
 import { useMemo, useState } from 'react'
 import { BN } from 'bn.js'
 import { LinkButton } from './Button'
 import { ChevronDownIcon } from '@heroicons/react/solid'
-
-const COLORS = ['bg-orange-700', 'bg-blue-500', 'bg-purple-800', 'bg-white']
 
 type VoteResultsProps = {
   isListView?: boolean
@@ -41,10 +38,11 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
   }, [multiWeightVotes])
 
   const reducedOptions = useMemo(() => {
-    if (options.length < 5) return options
+    const SHOW_NUM = 4
+    if (options.length < SHOW_NUM + 1) return options
 
-    const reduced = options.slice(0, 3)
-    const otherOptions = options.slice(3)
+    const reduced = options.slice(0, SHOW_NUM - 1)
+    const otherOptions = options.slice(SHOW_NUM - 1)
 
     const rest = otherOptions.reduce(
       (obj, current) => {
@@ -70,29 +68,35 @@ const MultiChoiceVoteResults = ({ isListView, proposal }: VoteResultsProps) => {
         <div className="rounded-md w-full">
           {isListView ? (
             <>
-              <div className="flex flex-row mb-4 gap-10">
-                {!votesExist ? <p>No votes casted yet</p> : undefined}
-                {reducedOptions.map((opt, index) => (
-                  <div key={opt.label}>
-                    <div className="flex flex-row items-center">
+              {!votesExist ? <p>No votes casted yet</p> : undefined}
+              {reducedOptions.map((option, index) => (
+                <div
+                  className={`flex justify-between items-center ${
+                    index !== reducedOptions.length - 1 ? 'mb-1.5' : ''
+                  }`}
+                  key={option.label}
+                >
+                  <span className="flex-grow truncate font-bold text-base">
+                    {option.label}
+                  </span>
+                  <div className="flex gap-2 items-center">
+                    <p className="text-sm font-medium">{`${(
+                      option.relativeVoteResult * 100
+                    ).toFixed(1)}%`}</p>
+                    <div className="w-full flex">
+                      <div className="h-1 bg-sky-400 w-[1px]" />
                       <div
-                        className={`${COLORS[index]} w-3 h-3 rounded-lg mr-2`}
+                        className="h-1 bg-sky-400"
+                        style={{
+                          width: `${Math.round(
+                            option.relativeVoteResult * 100
+                          )}px`,
+                        }}
                       />
-                      <p className="truncate w-36">{opt.label}</p>
                     </div>
-                    <p className="ml-5 font-bold text-fgd-1">
-                      <span className="text-xs font-bold text-white">
-                        {(opt.relativeVoteResult * 100).toFixed(1)}%
-                      </span>
-                    </p>
                   </div>
-                ))}
-              </div>
-              <MultiChoiceVoteResultsBar
-                options={reducedOptions}
-                votesExist={votesExist}
-                colors={COLORS}
-              />
+                </div>
+              ))}
             </>
           ) : (
             <div className={votesExist ? 'mt-7' : undefined}>
