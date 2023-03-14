@@ -3,12 +3,43 @@ import useCrewsPluginStore from 'CrewsVotePlugin/store/crewsPluginStore'
 import useWalletStore from 'stores/useWalletStore'
 
 import Select from '@components/inputs/Select'
-import { CrewWrapper } from '@marinade.finance/sg-crews-sdk'
 import { useEffect } from 'react'
 import { abbreviateAddress } from '@utils/formatting'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { BN } from 'bn.js'
+import BN from 'bn.js'
 import { formatNumber } from '@utils/formatNumber'
+import { CrewWrapperEnvelope } from 'CrewsVotePlugin/store/types'
+
+const CrewSelectionItem = ({
+  crewEnvelope,
+}: {
+  crewEnvelope: CrewWrapperEnvelope
+}) => {
+  return (
+    <div className="flex flex-row justify-between w-full">
+      <div className="text-fgd-1">
+        <div className="mb-0.5 truncate w-full">
+          {crewEnvelope.crewWrapper.data.name}
+        </div>
+        <div className="space-y-0.5 text-xs text-fgd-3">
+          <div>
+            Address: {abbreviateAddress(crewEnvelope.crewWrapper.address)}
+          </div>
+        </div>
+      </div>
+      <div className="text-fgd-1 text-right mr-2">
+        <div className="font-bold text-white text-sm mb-0.5 w-full">
+          {formatNumber(
+            crewEnvelope.votingPower.div(new BN(LAMPORTS_PER_SOL)).toNumber()
+          )}
+        </div>
+        <div className="space-y-0.5 text-xs text-fgd-3">
+          <div>Voting power</div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 interface Props {
   className?: string
@@ -17,7 +48,6 @@ interface Props {
 export default function CrewsVotingPower({ className }: Props) {
   const crews = useCrewsPluginStore((s) => s.state.votingCrews)
   const selectedCrew = useCrewsPluginStore((s) => s.state.selectedCrew)
-  const votingPower = useCrewsPluginStore((s) => s.state.votingPower)
   const isLoading = useCrewsPluginStore((s) => s.state.isLoadingCrews)
   const connected = useWalletStore((s) => s.connected)
   const { setSelectedCrew } = useCrewsPluginStore()
@@ -46,31 +76,10 @@ export default function CrewsVotingPower({ className }: Props) {
     <div className={className}>
       <Select
         label="Active crew"
-        onChange={(selection) => {
-          setSelectedCrew(selection as CrewWrapper)
-        }}
+        onChange={(selection) => setSelectedCrew(selection)}
         componentLabel={
           selectedCrew ? (
-            <div className="flex flex-row justify-between w-full">
-              <div className="text-fgd-1">
-                <div className="mb-0.5 truncate w-full">
-                  {selectedCrew.data.name}
-                </div>
-                <div className="space-y-0.5 text-xs text-fgd-3">
-                  <div>Address: {abbreviateAddress(selectedCrew.address)}</div>
-                </div>
-              </div>
-              <div className="text-fgd-1 text-right mr-2">
-                <div className="font-bold text-white text-sm mb-0.5 w-full">
-                  {formatNumber(
-                    votingPower.div(new BN(LAMPORTS_PER_SOL)).toNumber()
-                  )}
-                </div>
-                <div className="space-y-0.5 text-xs text-fgd-3">
-                  <div>Voting power</div>
-                </div>
-              </div>
-            </div>
+            <CrewSelectionItem crewEnvelope={selectedCrew} />
           ) : undefined
         }
         placeholder="Please select.."
@@ -79,8 +88,11 @@ export default function CrewsVotingPower({ className }: Props) {
       >
         {crews.map((crew) => {
           return (
-            <Select.Option key={crew.address.toBase58()} value={crew}>
-              {crew.data.name}
+            <Select.Option
+              key={crew.crewWrapper.address.toBase58()}
+              value={crew}
+            >
+              <CrewSelectionItem crewEnvelope={crew} />
             </Select.Option>
           )
         })}

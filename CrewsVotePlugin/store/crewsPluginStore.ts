@@ -3,19 +3,20 @@ import { BN } from '@project-serum/anchor'
 import { ProgramAccount, TokenOwnerRecord } from '@solana/spl-governance'
 import { PublicKey } from '@solana/web3.js'
 import create, { State } from 'zustand'
+import { CrewWrapperEnvelope } from './types'
 
 interface crewsPluginStore extends State {
   state: {
-    votingCrews: CrewWrapper[]
-    selectedCrew: CrewWrapper | undefined
+    votingCrews: CrewWrapperEnvelope[]
+    selectedCrew: CrewWrapperEnvelope | undefined
     currentTokenOwnerRecord: ProgramAccount<TokenOwnerRecord> | undefined
     votingPower: BN
     currentMaxVoterPublicKey: PublicKey | undefined
     isLoadingCrews: boolean
   }
   setVotingCrews: (crews: CrewWrapper[]) => void
-  setSelectedCrew: (crew: CrewWrapper | undefined) => void
-  setVotingPower: (crew: CrewWrapper | undefined) => void
+  setSelectedCrew: (crew: CrewWrapperEnvelope | undefined) => void
+  setVotingPower: (votingPower: BN | undefined) => void
   setCurrentTokenOwnerRecord: (crew: CrewWrapper | undefined) => void
   setCurrentMaxVoterPublicKey: (
     maxVoterPublicKey: PublicKey | undefined
@@ -41,9 +42,19 @@ const useCrewsPluginStore = create<crewsPluginStore>((set, _get) => ({
       s.state.isLoadingCrews = val
     })
   },
-  setVotingCrews: (crews) => {
+  setVotingCrews: async (crews) => {
+    const extendedCrews = await Promise.all(
+      crews.map(async (crew) => {
+        return {
+          crewWrapper: crew,
+          votingPower: (await crew.voterWeightRecord()).voterWeight,
+        } as CrewWrapperEnvelope
+      })
+    )
     set((s) => {
-      s.state.votingCrews = crews
+      s.state.votingCrews = extendedCrews.sort((a, b) =>
+        a.crewWrapper.data.name.localeCompare(b.crewWrapper.data.name)
+      )
     })
     if (crews.length === 0) _get().setSelectedCrew(undefined)
   },
@@ -51,13 +62,12 @@ const useCrewsPluginStore = create<crewsPluginStore>((set, _get) => ({
     set((s) => {
       s.state.selectedCrew = crew
     })
-    _get().setVotingPower(crew)
-    _get().setCurrentTokenOwnerRecord(crew)
+    _get().setVotingPower(crew?.votingPower)
+    _get().setCurrentTokenOwnerRecord(crew?.crewWrapper)
   },
-  setVotingPower: async (crew) => {
-    const record = await crew?.voterWeightRecord()
+  setVotingPower: (votingPower) => {
     set((s) => {
-      s.state.votingPower = record?.voterWeight ?? new BN(0)
+      s.state.votingPower = votingPower ?? new BN(0)
     })
   },
   setCurrentTokenOwnerRecord: async (crew) => {
