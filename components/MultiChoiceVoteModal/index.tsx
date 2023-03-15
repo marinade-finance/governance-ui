@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useMemo, useState } from 'react'
+import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
 import { RpcContext, getVoteRecordAddress } from '@solana/spl-governance'
 import useWalletStore from '../../stores/useWalletStore'
 import useRealm from '../../hooks/useRealm'
@@ -187,6 +187,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
     setRevoking(false)
   }
 
+  const [descending, setDescending] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredOptions, setFilteredOptions] = useState(multiWeightVotes ?? [])
 
@@ -196,21 +197,19 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
         voteWeights,
         updateWeight,
         getRelativeVoteWeight,
+        descending,
+        () => setDescending((state) => !state),
         multiWeightVotes
       ),
-    [voteWeights, updateWeight, getRelativeVoteWeight, multiWeightVotes]
+    [
+      voteWeights,
+      updateWeight,
+      getRelativeVoteWeight,
+      multiWeightVotes,
+      descending,
+      setDescending,
+    ]
   )
-
-  const filterOptions = (searchString: string) => {
-    setSearchTerm(searchString)
-    if (searchString !== '' && multiWeightVotes) {
-      setFilteredOptions(
-        multiWeightVotes.filter((a) => a.label.includes(searchString.trim()))
-      )
-    } else {
-      setFilteredOptions(multiWeightVotes ?? [])
-    }
-  }
 
   const toggleExpand = () => {
     setExpanded((state) => !state)
@@ -221,6 +220,24 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
     data: filteredOptions,
     getCoreRowModel: getCoreRowModel(),
   })
+
+  useEffect(() => {
+    const factor = descending ? -1 : 1
+    const sortedMultiWeigthtVotes = multiWeightVotes
+      ?.concat()
+      .sort((a, b) =>
+        a.voteWeight.lt(b.voteWeight) ? -1 * factor : 1 * factor
+      )
+    if (searchTerm !== '' && sortedMultiWeigthtVotes) {
+      setFilteredOptions(
+        sortedMultiWeigthtVotes.filter((a) =>
+          a.label.includes(searchTerm.trim())
+        )
+      )
+    } else {
+      setFilteredOptions(sortedMultiWeigthtVotes ?? [])
+    }
+  }, [searchTerm, descending, multiWeightVotes])
 
   return (
     <Modal.Root open={isOpen} onOpenChange={onOpenChange}>
@@ -263,7 +280,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
                   className="pl-8 border-neutral-700 placeholder-neutral-500"
                   value={searchTerm}
                   type="text"
-                  onChange={(e) => filterOptions(e.target.value)}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search gauges"
                   prefix={<SearchIcon className="w-5 h-5 text-neutral-500" />}
                   noMaxWidth

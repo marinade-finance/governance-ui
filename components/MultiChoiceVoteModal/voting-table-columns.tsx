@@ -2,6 +2,7 @@ import Input from '@components/inputs/Input'
 import { createColumnHelper } from '@tanstack/react-table'
 import type { ProposalOption } from '@solana/spl-governance'
 import { BN } from 'bn.js'
+import { CaretDown } from '@carbon/icons-react'
 
 const headerStyle = 'text-xs text-neutral-500 font-normal'
 
@@ -11,6 +12,8 @@ export const getColumns = (
   voteWeights: Record<string, number>,
   updateWeight: (optionId: string, updateValue: string) => void,
   getRelativeVoteWeight: (optionId: string) => number,
+  descendingWeights: boolean,
+  toggleDescendingWeights: () => void,
   currentVotes?: ProposalOption[]
 ) => [
   columnHelper.accessor('label', {
@@ -21,7 +24,15 @@ export const getColumns = (
   }),
   columnHelper.accessor('label', {
     id: 'currentVotes',
-    header: () => <span className={headerStyle}>Current votes %</span>,
+    header: () => (
+      <div
+        className={`flex items-end gap-2 cursor-pointer hover:text-neutral-400 ${headerStyle}`}
+        onClick={toggleDescendingWeights}
+      >
+        <span>Current votes %</span>
+        <CaretDown className={descendingWeights ? '' : 'rotate-180'} />
+      </div>
+    ),
     cell: (info) => {
       const currentVote = currentVotes?.find((v) => v.label === info.getValue())
       const totalWeight = currentVotes?.reduce(
