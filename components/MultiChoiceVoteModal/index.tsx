@@ -47,6 +47,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   const client = useVotePluginsClientStore(
     (s) => s.state.currentRealmVotingClient
   )
+  const [expanded, setExpanded] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [revoking, setRevoking] = useState(false)
   const wallet = useWalletStore((s) => s.current)
@@ -211,6 +212,10 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
     }
   }
 
+  const toggleExpand = () => {
+    setExpanded((state) => !state)
+  }
+
   const table = useReactTable({
     columns,
     data: filteredOptions,
@@ -228,10 +233,29 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
                 <Events />
                 <h2 className="text-xs">CAST YOUR COMMUNITY VOTES</h2>
               </div>
-              <p className="text-sm mt-2">
-                sapien faucibus et molestie ac feugiat sed lectus vestibulum
-                mattis ullamcorper velit sed ullamcorper...
-              </p>
+              <div
+                className={`text-sm mt-2 relative flex items-start ${
+                  !expanded ? 'w-10/12' : ''
+                }`}
+              >
+                <p
+                  className={`overflow-hidden text-ellipsis ${
+                    expanded ? 'whitespace-normal' : 'whitespace-nowrap'
+                  }`}
+                >
+                  The current impact of your votes will be reflected
+                  dynamically. Note that those numbers are subject to change
+                  depending on the amount of votes casted for this cycle.
+                </p>
+                <button
+                  className={`text-neutral-500 hover:text-neutral-400 text-sm ${
+                    !expanded ? 'ml-1' : 'absolute right-0 bottom-0'
+                  }`}
+                  onClick={toggleExpand}
+                >
+                  {!expanded ? 'more' : 'less'}
+                </button>
+              </div>
             </div>
             <div className="px-8 mt-5">
               <div className="flex gap-4">
