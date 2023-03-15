@@ -48,10 +48,10 @@ export const getColumns = (
               .toNumber() / 10000
           : 0
       return (
-        <div className="flex text-white text-sm items-center">
-          <span className="w-16">{`${(relativeWeight * 100).toFixed(
-            2
-          )}%`}</span>
+        <div className="flex text-white text-sm items-center gap-2">
+          <span className="w-[59px] text-right">{`${(
+            relativeWeight * 100
+          ).toFixed(2)}%`}</span>
           <div
             className="h-1 bg-sky-400"
             style={{ width: `${1 + Math.round(relativeWeight * 100)}px` }}
