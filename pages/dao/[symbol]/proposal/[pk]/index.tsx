@@ -1,5 +1,5 @@
-import ReactMarkdown from 'react-markdown/react-markdown.min'
 import remarkGfm from 'remark-gfm'
+import remarkRequests from 'remark-requests'
 import { ExternalLinkIcon } from '@heroicons/react/outline'
 import useProposal from 'hooks/useProposal'
 import ProposalStateBadge from '@components/ProposalStateBadge'
@@ -30,6 +30,7 @@ import ProposalWarnings from './ProposalWarnings'
 import MultiChoiceVotesCasted from '@components/MultiChoiceVotesCasted'
 import MultiChoiceVoteResults from '@components/MultiChoiceVoteResults'
 import { CastMultiChoiceVoteButton } from '@components/VotePanel/CastMultiChoiceVoteButtons'
+import { Remark } from 'react-remark'
 
 const Proposal = () => {
   const { realmInfo, symbol } = useRealm()
@@ -104,14 +105,25 @@ const Proposal = () => {
             </div>
 
             {description && (
-              <div className="pb-2">
-                <ReactMarkdown
-                  className="markdown"
-                  linkTarget="_blank"
-                  remarkPlugins={[remarkGfm]}
+              <div className="pb-2 markdown">
+                <Remark
+                  remarkPlugins={[
+                    remarkGfm,
+                    [
+                      remarkRequests,
+                      {
+                        apis: [
+                          {
+                            name: 'marinadeApi',
+                            url: 'https://api.marinade.finance/tlv',
+                          },
+                        ],
+                      },
+                    ],
+                  ]}
                 >
                   {description}
-                </ReactMarkdown>
+                </Remark>
               </div>
             )}
             <ProposalWarnings />
