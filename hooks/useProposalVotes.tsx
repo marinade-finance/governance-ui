@@ -60,7 +60,7 @@ export default function useProposalVotes(proposal?: Proposal) {
     (voteThresholdPct / 100)
 
   const multiWeightVotes =
-    proposal.options.length > 1 ? proposal.options : undefined
+    proposal.options?.length > 1 ? proposal.options : undefined
 
   const yesVotePct = !multiWeightVotes
     ? calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
