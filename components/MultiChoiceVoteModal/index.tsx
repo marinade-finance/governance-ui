@@ -62,7 +62,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   const { multiWeightVotes } = useProposalVotes(proposal?.account)
   const { realm, realmInfo, config } = useRealm()
   const { refetchProposals } = useWalletStore((s) => s.actions)
-  const { getVotes } = useContext(VoteWeightsContext)
+  const { getVotes, presetWeights } = useContext(VoteWeightsContext)
 
   const isNftPlugin =
     config?.account.communityTokenConfig.voterWeightAddin &&
@@ -230,12 +230,22 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
     }
   }, [searchTerm, descending, multiWeightVotes])
 
+  useEffect(() => {
+    if (ownVoteRecord?.account.vote && multiWeightVotes) {
+      presetWeights(ownVoteRecord.account.vote, multiWeightVotes)
+    }
+  }, [ownVoteRecord, multiWeightVotes])
+
   return (
     <Modal.Root open={isOpen} onOpenChange={onOpenChange}>
       <Modal.Portal>
         <Modal.Overlay>
           <Modal.Content className="flex flex-col w-full max-w-4xl mx-10 max-h-[70vh]">
-            <Modal.Close />
+            <Modal.Close
+              onClick={() =>
+                presetWeights(ownVoteRecord?.account.vote, multiWeightVotes)
+              }
+            />
             <div className="p-8 pb-6 border-b border-neutral-700">
               <div className="flex gap-2 text-neutral-500">
                 <Events />

@@ -8,6 +8,10 @@ import {
 
 interface VoteWeightsContextType {
   voteWeights: Record<string, number>
+  presetWeights: (
+    votes: Vote | undefined,
+    options: ProposalOption[] | undefined
+  ) => void
   updateWeight: (optionId: string, updateValue: string) => void
   getRelativeVoteWeight: (optionId: string) => number
   getVotes: (options?: ProposalOption[]) => Vote
@@ -16,6 +20,9 @@ interface VoteWeightsContextType {
 export const VoteWeightsContext = createContext<VoteWeightsContextType>({
   voteWeights: {},
   updateWeight: () => {
+    throw new Error('not implemented')
+  },
+  presetWeights: () => {
     throw new Error('not implemented')
   },
   getRelativeVoteWeight: () => {
@@ -45,6 +52,24 @@ export const useVoteWeights = (): VoteWeightsContextType => {
     } else {
       setVoteWeights({ ...voteWeights, [optionId]: value })
     }
+  }
+
+  const presetWeights = (
+    votes: Vote | undefined,
+    options: ProposalOption[] | undefined
+  ) => {
+    const weights: Record<string, number> = {}
+
+    if (
+      votes?.approveChoices &&
+      options?.length === votes.approveChoices.length
+    ) {
+      votes.approveChoices.forEach((vote, index) => {
+        weights[options[index].label] = vote.weightPercentage
+      })
+    }
+
+    setVoteWeights(weights)
   }
 
   const getRelativeVoteWeight = (optionId: string) => {
@@ -78,5 +103,11 @@ export const useVoteWeights = (): VoteWeightsContextType => {
     })
   }
 
-  return { voteWeights, updateWeight, getRelativeVoteWeight, getVotes }
+  return {
+    voteWeights,
+    updateWeight,
+    presetWeights,
+    getRelativeVoteWeight,
+    getVotes,
+  }
 }
