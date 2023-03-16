@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 import {
   ProposalOption,
   Vote,
@@ -6,7 +6,27 @@ import {
   VoteKind,
 } from '@solana/spl-governance'
 
-export const useVoteWeights = () => {
+interface VoteWeightsContextType {
+  voteWeights: Record<string, number>
+  updateWeight: (optionId: string, updateValue: string) => void
+  getRelativeVoteWeight: (optionId: string) => number
+  getVotes: (options?: ProposalOption[]) => Vote
+}
+
+export const VoteWeightsContext = createContext<VoteWeightsContextType>({
+  voteWeights: {},
+  updateWeight: () => {
+    throw new Error('not implemented')
+  },
+  getRelativeVoteWeight: () => {
+    throw new Error('not implemented')
+  },
+  getVotes: () => {
+    throw new Error('not implemented')
+  },
+})
+
+export const useVoteWeights = (): VoteWeightsContextType => {
   const [voteWeights, setVoteWeights] = useState<Record<string, number>>({})
   const [totalVoteWeight, setTotalVoteWeight] = useState(0)
 

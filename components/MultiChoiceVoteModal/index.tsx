@@ -1,4 +1,10 @@
-import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
+import React, {
+  FunctionComponent,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { RpcContext, getVoteRecordAddress } from '@solana/spl-governance'
 import useWalletStore from '../../stores/useWalletStore'
 import useRealm from '../../hooks/useRealm'
@@ -15,7 +21,7 @@ import useProposalVotes from '@hooks/useProposalVotes'
 import { getColumns } from './voting-table-columns'
 import Input from '@components/inputs/Input'
 import { SearchIcon } from '@heroicons/react/solid'
-import { useVoteWeights } from './useVoteWeights'
+import { useVoteWeights, VoteWeightsContext } from './useVoteWeights'
 import {
   flexRender,
   getCoreRowModel,
@@ -56,12 +62,7 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   const { multiWeightVotes } = useProposalVotes(proposal?.account)
   const { realm, realmInfo, config } = useRealm()
   const { refetchProposals } = useWalletStore((s) => s.actions)
-  const {
-    voteWeights,
-    updateWeight,
-    getRelativeVoteWeight,
-    getVotes,
-  } = useVoteWeights()
+  const { getVotes } = useContext(VoteWeightsContext)
 
   const isNftPlugin =
     config?.account.communityTokenConfig.voterWeightAddin &&
@@ -194,21 +195,11 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   const columns = useMemo(
     () =>
       getColumns(
-        voteWeights,
-        updateWeight,
-        getRelativeVoteWeight,
         descending,
         () => setDescending((state) => !state),
         multiWeightVotes
       ),
-    [
-      voteWeights,
-      updateWeight,
-      getRelativeVoteWeight,
-      multiWeightVotes,
-      descending,
-      setDescending,
-    ]
+    [multiWeightVotes, descending, setDescending]
   )
 
   const toggleExpand = () => {
@@ -357,4 +348,12 @@ const MultiChoiceVoteModal: FunctionComponent<MultiChoiceVoteModalProps> = ({
   )
 }
 
-export default MultiChoiceVoteModal
+export default (props: MultiChoiceVoteModalProps) => {
+  const contextValue = useVoteWeights()
+
+  return (
+    <VoteWeightsContext.Provider value={contextValue}>
+      <MultiChoiceVoteModal {...props} />
+    </VoteWeightsContext.Provider>
+  )
+}
