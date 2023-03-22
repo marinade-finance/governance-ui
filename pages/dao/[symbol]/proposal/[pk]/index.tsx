@@ -1,5 +1,5 @@
-import ReactMarkdown from 'react-markdown/react-markdown.min'
 import remarkGfm from 'remark-gfm'
+import remarkRequests from 'remark-requests'
 import { ExternalLinkIcon } from '@heroicons/react/outline'
 import useProposal from 'hooks/useProposal'
 import ProposalStateBadge from '@components/ProposalStateBadge'
@@ -27,6 +27,10 @@ import ProposalVotingPower from '@components/ProposalVotingPower'
 import { useMediaQuery } from 'react-responsive'
 import NftProposalVoteState from 'NftVotePlugin/NftProposalVoteState'
 import ProposalWarnings from './ProposalWarnings'
+import MultiChoiceVotesCasted from '@components/MultiChoiceVotesCasted'
+import MultiChoiceVoteResults from '@components/MultiChoiceVoteResults'
+import { CastMultiChoiceVoteButton } from '@components/VotePanel/CastMultiChoiceVoteButtons'
+import { Remark } from 'react-remark'
 
 const Proposal = () => {
   const { realmInfo, symbol } = useRealm()
@@ -101,14 +105,25 @@ const Proposal = () => {
             </div>
 
             {description && (
-              <div className="pb-2">
-                <ReactMarkdown
-                  className="markdown"
-                  linkTarget="_blank"
-                  remarkPlugins={[remarkGfm]}
+              <div className="pb-2 markdown">
+                <Remark
+                  remarkPlugins={[
+                    remarkGfm,
+                    [
+                      remarkRequests,
+                      {
+                        apis: [
+                          {
+                            name: 'marinadeApi',
+                            url: 'https://api.marinade.finance/tlv',
+                          },
+                        ],
+                      },
+                    ],
+                  ]}
                 >
                   {description}
-                </ReactMarkdown>
+                </Remark>
               </div>
             )}
             <ProposalWarnings />
@@ -137,37 +152,46 @@ const Proposal = () => {
               ) : (
                 <h3 className="mb-4">Results</h3>
               )}
-              {proposal?.account.state === ProposalState.Voting ? (
+              {voteData.multiWeightVotes ? (
                 <>
-                  <div className="pb-3">
-                    <ApprovalProgress
-                      votesRequired={voteData.yesVotesRequired}
-                      progress={voteData.yesVoteProgress}
-                      showBg
-                    />
-                  </div>
-                  {voteData._programVersion !== undefined &&
-                  // @asktree: here is some typescript gore because typescript doesn't know that a number being > 3 means it isn't 1 or 2
-                  voteData._programVersion !== 1 &&
-                  voteData._programVersion !== 2 &&
-                  voteData.veto !== undefined &&
-                  (voteData.veto.voteProgress ?? 0) > 0 ? (
-                    <div className="pb-3">
-                      <VetoProgress
-                        votesRequired={voteData.veto.votesRequired}
-                        progress={voteData.veto.voteProgress}
-                        showBg
-                      />
-                    </div>
-                  ) : undefined}
+                  <MultiChoiceVotesCasted proposal={proposal.account} />
+                  <MultiChoiceVoteResults proposal={proposal.account} />
                 </>
               ) : (
-                <div className="pb-3">
-                  <VoteResultStatus />
-                </div>
+                <>
+                  {proposal?.account.state === ProposalState.Voting ? (
+                    <>
+                      <div className="pb-3">
+                        <ApprovalProgress
+                          votesRequired={voteData.yesVotesRequired}
+                          progress={voteData.yesVoteProgress}
+                          showBg
+                        />
+                      </div>
+                      {voteData._programVersion !== undefined &&
+                      // @asktree: here is some typescript gore because typescript doesn't know that a number being > 3 means it isn't 1 or 2
+                      voteData._programVersion !== 1 &&
+                      voteData._programVersion !== 2 &&
+                      voteData.veto !== undefined &&
+                      (voteData.veto.voteProgress ?? 0) > 0 ? (
+                        <div className="pb-3">
+                          <VetoProgress
+                            votesRequired={voteData.veto.votesRequired}
+                            progress={voteData.veto.voteProgress}
+                            showBg
+                          />
+                        </div>
+                      ) : undefined}
+                    </>
+                  ) : (
+                    <div className="pb-3">
+                      <VoteResultStatus />
+                    </div>
+                  )}
+                  <VoteResults proposal={proposal.account} />
+                </>
               )}
-              <VoteResults proposal={proposal.account} />
-              {proposal && (
+              {proposal && !voteData.multiWeightVotes && (
                 <div className="flex justify-end mt-4">
                   <Link
                     href={fmtUrlWithCluster(
@@ -185,7 +209,11 @@ const Proposal = () => {
             </div>
           </div>
         ) : null}
-        <VotePanel />
+        {voteData.multiWeightVotes ? (
+          <CastMultiChoiceVoteButton />
+        ) : (
+          <VotePanel />
+        )}
         <NftProposalVoteState proposal={proposal}></NftProposalVoteState>
         {proposal && currentWallet && showProposalExecution && (
           <ProposalExecutionCard />

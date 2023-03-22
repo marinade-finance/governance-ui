@@ -11,7 +11,9 @@ const ENDPOINTS: EndpointInfo[] = [
   },
   {
     name: 'devnet',
-    url: process.env.DEVNET_RPC || 'https://api.dao.devnet.solana.com/',
+    url:
+      process.env.DEVNET_RPC ||
+      'https://chaotic-light-frog.solana-devnet.discover.quiknode.pro/f99ed66dd7c8d7a1740741072330cbb9bc3a419e/',
   },
   {
     name: 'localnet',

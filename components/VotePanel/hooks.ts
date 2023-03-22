@@ -8,6 +8,7 @@ import { useHasVoteTimeExpired } from '@hooks/useHasVoteTimeExpired'
 import useRealm from '@hooks/useRealm'
 import { ProposalState, GoverningTokenRole } from '@solana/spl-governance'
 import dayjs from 'dayjs'
+import type { PublicKey } from '@solana/web3.js'
 import useWalletStore from 'stores/useWalletStore'
 
 export const useIsVoting = () => {
@@ -83,6 +84,14 @@ export const useProposalVoteRecordQuery = (quorum: 'electoral' | 'veto') => {
   const pda = useAddressQuery_SelectedProposalVoteRecord(
     selectedTokenRecord?.data
   )
+
+  return useVoteRecordByPubkeyQuery(pda.data)
+}
+
+export const useProposalVoteRecordQueryByTokenOwner = (
+  tokenOwnerRecord?: PublicKey
+) => {
+  const pda = useAddressQuery_SelectedProposalVoteRecord(tokenOwnerRecord)
 
   return useVoteRecordByPubkeyQuery(pda.data)
 }

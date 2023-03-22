@@ -29,15 +29,19 @@ export class SwitchboardQueueVoterClient {
   static async connect(
     provider: Provider,
     devnet?: boolean
-  ): Promise<SwitchboardQueueVoterClient> {
+  ): Promise<SwitchboardQueueVoterClient | undefined> {
     // alternatively we could fetch from chain
     // const idl = await Program.fetchIdl(VSR_ID, provider);
     const idl = IDL
 
-    return new SwitchboardQueueVoterClient(
-      new Program<Switchboard>(idl as Switchboard, SWITCHBOARD_ID, provider),
-      devnet
-    )
+    try {
+      return new SwitchboardQueueVoterClient(
+        new Program<Switchboard>(idl as Switchboard, SWITCHBOARD_ID, provider),
+        devnet
+      )
+    } catch {
+      return undefined
+    }
   }
 }
 

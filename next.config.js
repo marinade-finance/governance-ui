@@ -2,7 +2,6 @@
 // see https://github.com/vercel/next.js/issues/25454
 const { withSentryConfig } = require('@sentry/nextjs')
 const withTM = require('next-transpile-modules')([
-  'react-markdown',
   '@solana/wallet-adapter-base',
   '@solana/wallet-adapter-phantom',
   '@solana/wallet-adapter-sollet',

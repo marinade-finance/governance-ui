@@ -32,6 +32,7 @@ export default function useProposalVotes(proposal?: Proposal) {
       yesVotesRequired: undefined,
       relativeNoVotes: undefined,
       relativeYesVotes: undefined,
+      multiWeightVotes: undefined,
     }
 
   const isCommunityVote =
@@ -58,14 +59,18 @@ export default function useProposalVotes(proposal?: Proposal) {
     fmtTokenAmount(maxVoteWeight, proposalMint.decimals) *
     (voteThresholdPct / 100)
 
-  const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
+  const multiWeightVotes =
+    proposal.options?.length > 1 ? proposal.options : undefined
+
+  const yesVotePct = !multiWeightVotes
+    ? calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
+    : 0
   const yesVoteProgress = (yesVotePct / voteThresholdPct) * 100
 
-  const isMultiProposal = proposal?.options?.length > 1
-  const yesVoteCount = !isMultiProposal
+  const yesVoteCount = !multiWeightVotes
     ? fmtTokenAmount(proposal.getYesVoteCount(), proposalMint.decimals)
     : 0
-  const noVoteCount = !isMultiProposal
+  const noVoteCount = !multiWeightVotes
     ? fmtTokenAmount(proposal.getNoVoteCount(), proposalMint.decimals)
     : 0
 
@@ -94,6 +99,7 @@ export default function useProposalVotes(proposal?: Proposal) {
     relativeNoVotes,
     minimumYesVotes,
     yesVotesRequired,
+    multiWeightVotes,
   }
 
   // @asktree: you may be asking yourself, "is this different from the more succinct way to write this?"
