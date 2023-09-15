@@ -17,7 +17,10 @@ import VoteBySwitch from 'pages/dao/[symbol]/proposal/components/VoteBySwitch'
 import Button from '@components/Button'
 import Tooltip from '@components/Tooltip'
 import { getStakeSchema } from '@utils/validations'
-import { getConvertToMsolInstruction } from '@utils/instructionTools'
+import {
+  getConvertToMsolInstruction,
+  getMarinadeNativeStakeInstruction,
+} from '@utils/instructionTools'
 import { getInstructionDataFromBase64 } from '@solana/spl-governance'
 import useQueryContext from '@hooks/useQueryContext'
 import { useRouter } from 'next/router'
@@ -27,12 +30,16 @@ import { AssetAccount } from '@utils/uiTypes/assets'
 import useWalletOnePointOh from '@hooks/useWalletOnePointOh'
 import { useRealmQuery } from '@hooks/queries/realm'
 import useLegacyConnectionContext from '@hooks/useLegacyConnectionContext'
+import { ButtonToggle } from '@hub/components/controls/ButtonToggle'
+import { InstructionDataWithHoldUpTime } from 'actions/createProposal'
 
-const ConvertToMsol = () => {
+const MarinadeModal = () => {
   const realm = useRealmQuery().data?.result
   const { canChooseWhoVote, symbol } = useRealm()
-  const { canUseTransferInstruction } = useGovernanceAssets()
-  const { governedTokenAccounts } = useGovernanceAssets()
+  const {
+    canUseTransferInstruction,
+    governedTokenAccounts,
+  } = useGovernanceAssets()
   const { fmtUrlWithCluster } = useQueryContext()
   const router = useRouter()
   const { handleCreateProposal } = useCreateProposal()
@@ -50,6 +57,7 @@ const ConvertToMsol = () => {
     title: '',
     description: '',
   })
+  const [isNative, setIsNative] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
   const [voteByCouncil, setVoteByCouncil] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -64,7 +72,9 @@ const ConvertToMsol = () => {
         form.governedTokenAccount.extensions.mint.account
       )
     : 1
-  const proposalTitle = `Convert ${form.amount} SOL to mSOL`
+  const proposalTitle = isNative
+    ? `Stake ${form.amount} SOL with Marinade Native`
+    : `Convert ${form.amount} SOL to mSOL`
   const schema = getStakeSchema({ form })
 
   const handleSetForm = ({ propertyName, value }) => {
@@ -76,15 +86,27 @@ const ConvertToMsol = () => {
     if (currentAccount?.governance === undefined) throw new Error()
 
     setIsLoading(true)
-    const instruction: UiInstruction = await getConvertToMsolInstruction({
-      schema,
-      form,
-      connection,
-      wallet,
-      setFormErrors,
-    })
+    let instructions: UiInstruction[] = []
+    if (isNative) {
+      instructions = await getMarinadeNativeStakeInstruction({
+        schema,
+        form,
+        wallet,
+        setFormErrors,
+      })
+    } else {
+      instructions.push(
+        await getConvertToMsolInstruction({
+          schema,
+          form,
+          connection,
+          wallet,
+          setFormErrors,
+        })
+      )
+    }
 
-    if (instruction.isValid) {
+    if (instructions.every((i) => i?.isValid)) {
       if (!realm) {
         setIsLoading(false)
         throw 'No realm selected'
@@ -93,20 +115,24 @@ const ConvertToMsol = () => {
       const governance = currentAccount?.governance
       const holdUpTime = governance?.account?.config.minInstructionHoldUpTime
 
-      const instructionData = {
-        data: instruction.serializedInstruction
-          ? getInstructionDataFromBase64(instruction.serializedInstruction)
-          : null,
-        holdUpTime: holdUpTime,
-        prerequisiteInstructions: instruction.prerequisiteInstructions || [],
-      }
+      const instructionsData: InstructionDataWithHoldUpTime[] = instructions.map(
+        (instruction) => ({
+          data: instruction.serializedInstruction
+            ? getInstructionDataFromBase64(instruction.serializedInstruction)
+            : null,
+          holdUpTime: holdUpTime,
+          prerequisiteInstructions: instruction.prerequisiteInstructions || [],
+        })
+      )
+
+      // ToDo: fix proposal infos not showing
 
       try {
         const proposalAddress = await handleCreateProposal({
-          title: form.title ? form.title : proposalTitle,
-          description: form.description ? form.description : '',
+          title: form.title ?? proposalTitle,
+          description: form.description ?? '',
           governance: currentAccount?.governance,
-          instructionsData: [instructionData],
+          instructionsData: instructionsData,
           voteByCouncil,
           isDraft: false,
         })
@@ -131,10 +157,17 @@ const ConvertToMsol = () => {
 
   return (
     <>
-      <h3 className="mb-4 flex items-center">Convert SOL to mSOL</h3>
+      <h3 className="mb-4 flex items-center">Marinade Staking</h3>
+      <ButtonToggle
+        value={isNative}
+        valueFalseText="Liquid Staking"
+        valueTrueText="Native Staking"
+        onChange={setIsNative}
+        className="mb-4"
+      />
       <AccountLabel></AccountLabel>
       <div className="space-y-4 w-full pb-4">
-        {mSolTokenAccounts.length > 0 && (
+        {!isNative && mSolTokenAccounts.length > 0 && (
           <GovernedAccountSelect
             label="mSOL Treasury account"
             governedAccounts={mSolTokenAccounts as AssetAccount[]}
@@ -250,4 +283,4 @@ const ConvertToMsol = () => {
   )
 }
 
-export default ConvertToMsol
+export default MarinadeModal
