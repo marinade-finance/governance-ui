@@ -276,7 +276,7 @@ export async function getMarinadeNativeStakeInstruction({
       seed,
       authorized: new Authorized(
         new PublicKey('stWirqFCf2Uts1JBL1Jsd3r6VBWhgnpdPxCTe1MFjrq'),
-        form.governedTokenAccount.governance.pubkey
+        form.governedTokenAccount.pubkey
       ),
       lamports: amount,
     })
