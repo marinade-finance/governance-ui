@@ -6,6 +6,7 @@ import { abbreviateAddress } from '@utils/formatting'
 import { formatNumber } from '@utils/formatNumber'
 import tokenPriceService from '@utils/services/tokenPrice'
 import { WSOL_MINT } from '@components/instructions/tools'
+import { PublicKey } from '@solana/web3.js'
 
 interface Props {
   className?: string
@@ -20,7 +21,11 @@ export default function StakeListItem(props: Props) {
   return (
     <ListItem
       className={props.className}
-      name={`Stake Account - ${abbreviateAddress(props.publicKey!)}`}
+      name={
+        props.publicKey === PublicKey.default.toString()
+          ? 'Marinade Native Stake Accounts'
+          : `Stake Account - ${abbreviateAddress(props.publicKey!)}`
+      }
       rhs={
         <div className="flex items-end flex-col">
           <div className="flex items-center space-x-1">

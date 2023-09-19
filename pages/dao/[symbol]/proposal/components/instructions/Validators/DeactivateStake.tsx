@@ -21,6 +21,11 @@ import { StakeAccount, StakeState } from '@utils/uiTypes/assets'
 import StakeAccountSelect from '../../StakeAccountSelect'
 import { getFilteredProgramAccounts } from '@utils/helpers'
 import useLegacyConnectionContext from '@hooks/useLegacyConnectionContext'
+import {
+  MARINADE_NATIVE_STAKING_AUTHORITY,
+  isMNativeStakeAccount,
+} from '@utils/marinade-native'
+import { NativeStakingSDK } from '@marinade.finance/native-staking-sdk'
 
 const DeactivateValidatorStake = ({
   index,
@@ -85,17 +90,49 @@ const DeactivateValidatorStake = ({
       ]
     )
 
-    return stakingAccounts.map((x) => {
+    let mNativeStakeAccounts:
+      | {
+          stakeAccount: web3.PublicKey
+          state: StakeState
+          delegatedValidator: web3.PublicKey
+          stakingAuthority: web3.PublicKey
+          amount: number
+        }
+      | undefined
+    const standardStakeAccounts = stakingAccounts.flatMap((x) => {
+      if (isMNativeStakeAccount(x.accountInfo.data)) {
+        mNativeStakeAccounts = {
+          stakeAccount: x.publicKey,
+          state: StakeState.Active,
+          delegatedValidator: web3.PublicKey.default,
+          stakingAuthority: MARINADE_NATIVE_STAKING_AUTHORITY,
+          amount:
+            (mNativeStakeAccounts?.amount ?? 0) +
+            x.accountInfo.lamports / web3.LAMPORTS_PER_SOL,
+        }
+
+        return []
+      }
+
       const validatorPk = web3.PublicKey.decode(
         x.accountInfo.data.slice(124, 124 + 32)
       )
-      return {
-        stakeAccount: x.publicKey,
-        state: StakeState.Active,
-        delegatedValidator: validatorPk as web3.PublicKey,
-        amount: x.accountInfo.lamports / web3.LAMPORTS_PER_SOL,
-      }
+      return [
+        {
+          stakeAccount: x.publicKey,
+          state: StakeState.Active,
+          delegatedValidator: validatorPk as web3.PublicKey,
+          stakingAuthority: web3.PublicKey.default,
+          amount: x.accountInfo.lamports / web3.LAMPORTS_PER_SOL,
+        },
+      ]
     })
+
+    if (mNativeStakeAccounts) {
+      standardStakeAccounts.push(mNativeStakeAccounts)
+    }
+
+    return standardStakeAccounts
   }
 
   //getStakeAccounts().then(x => setStakeAccounts(x))
@@ -117,14 +154,16 @@ const DeactivateValidatorStake = ({
     return true
   }
 
-  async function getInstruction(): Promise<UiInstruction> {
+  async function getInstruction(): Promise<UiInstruction[]> {
     const isValid = await validateInstruction()
-    const returnInvalid = (): UiInstruction => {
-      return {
-        serializedInstruction: '',
-        isValid: false,
-        governance: undefined,
-      }
+    const returnInvalid = (): UiInstruction[] => {
+      return [
+        {
+          serializedInstruction: '',
+          isValid: false,
+          governance: undefined,
+        },
+      ]
     }
     if (
       !connection ||
@@ -136,17 +175,32 @@ const DeactivateValidatorStake = ({
       console.log('Invalid form')
       return returnInvalid()
     }
-    const instruction = web3.StakeProgram.deactivate({
-      stakePubkey: form.stakingAccount.stakeAccount,
-      authorizedPubkey: form.governedTokenAccount.pubkey,
-    })
-    return {
-      serializedInstruction: serializeInstructionToBase64(
-        instruction.instructions[0]
-      ),
-      isValid: true,
-      governance: form.governedTokenAccount.governance,
+
+    const instructions: web3.TransactionInstruction[] = []
+
+    if (
+      form.stakingAccount.stakeAccount.toString() !==
+      web3.PublicKey.default.toString()
+    ) {
+      instructions.push(
+        ...web3.StakeProgram.deactivate({
+          stakePubkey: form.stakingAccount.stakeAccount,
+          authorizedPubkey: form.governedTokenAccount.pubkey,
+        }).instructions
+      )
+    } else {
+      const mNativeSdk = new NativeStakingSDK()
+      const { payFees } = await mNativeSdk.initPrepareForRevoke(
+        form.governedTokenAccount.pubkey
+      )
+      instructions.push(...payFees)
     }
+
+    return instructions.map((ix) => ({
+      serializedInstruction: serializeInstructionToBase64(ix),
+      isValid: true,
+      governance: form.governedTokenAccount!.governance,
+    }))
   }
 
   useEffect(() => {

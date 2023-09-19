@@ -99,10 +99,7 @@ export default function OtherAssetsList(props: Props) {
                 <StakeListItem
                   key={i}
                   amount={asset.amount}
-                  publicKey={
-                    asset.raw.extensions.stake?.stakeAccount &&
-                    abbreviateAddress(asset.raw.extensions.stake.stakeAccount!)
-                  }
+                  publicKey={asset.raw.extensions.stake?.stakeAccount.toString()}
                   onSelect={() => props.onSelect?.(asset)}
                 ></StakeListItem>
               )

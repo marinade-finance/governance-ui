@@ -4,6 +4,7 @@ import cx from 'classnames'
 import { Stake } from '@models/treasury/Asset'
 import Address from '@components/Address'
 import { DesktopComputerIcon } from '@heroicons/react/solid'
+import { PublicKey } from '@solana/web3.js'
 
 interface Props {
   className?: string
@@ -59,7 +60,14 @@ export default function Header(props: Props) {
                   {props.account.amount}
                 </div>
               </div>
-              <Address address={props.account.pubkey} className="text-xs" />
+              {props.account.pubkey.toString() ===
+              PublicKey.default.toString() ? (
+                <span className="text-xs text-white/50">
+                  Marinade Native Stake Accounts
+                </span>
+              ) : (
+                <Address address={props.account.pubkey} className="text-xs" />
+              )}
             </div>
           </div>
         </div>

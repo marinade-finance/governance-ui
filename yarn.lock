@@ -2199,6 +2199,15 @@
     borsh "^0.7.0"
     bs58 "^5.0.0"
 
+"@marinade.finance/native-staking-sdk@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@marinade.finance/native-staking-sdk/-/native-staking-sdk-1.0.0.tgz#9ce0f377f0924dab7e0edf67677fa68db2a9efaf"
+  integrity sha512-Cj2dy3SH9LAgcFBpGEgRHyF/nK+L7SfNIHkGqAZYRDVgn/h7u8bqKNkYqKXgCWbA5WwPmJzugWWm1DxEt7LyPQ==
+  dependencies:
+    "@solana/spl-memo" "^0.2.3"
+    "@solana/web3.js" "^1.74.0"
+    bn.js "^5.2.1"
+
 "@mean-dao/payment-streaming@4.0.3":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@mean-dao/payment-streaming/-/payment-streaming-4.0.3.tgz#6ad5ecc705eba86b204dade0910bf531095818ef"
@@ -4208,6 +4217,13 @@
     bs58 "^4.0.1"
     superstruct "^0.15.2"
 
+"@solana/spl-memo@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@solana/spl-memo/-/spl-memo-0.2.3.tgz#594a28c37b40c0e22143f38f71b4f56d1f5b24fd"
+  integrity sha512-CNsKSsl85ebuVoeGq1LDYi5M/PMs1Pxv2/UsyTgS6b30qrYqZOXha5ouZzgGKtJtZ3C3dxfOAEw6caJPN1N63w==
+  dependencies:
+    buffer "^6.0.3"
+
 "@solana/spl-stake-pool@^0.6.5":
   version "0.6.5"
   resolved "https://registry.yarnpkg.com/@solana/spl-stake-pool/-/spl-stake-pool-0.6.5.tgz#edb9985df9a7c5b772e379c0435545506fc526a7"
@@ -4716,7 +4732,7 @@
     "@wallet-standard/app" "^1.0.1"
     "@wallet-standard/base" "^1.0.1"
 
-"@solana/web3.js@1.56.0", "@solana/web3.js@1.73.3", "@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.22.0", "@solana/web3.js@^1.30.2", "@solana/web3.js@^1.31.0", "@solana/web3.js@^1.32.0", "@solana/web3.js@^1.35.1", "@solana/web3.js@^1.36.0", "@solana/web3.js@^1.37.1", "@solana/web3.js@^1.43.4", "@solana/web3.js@^1.44.3", "@solana/web3.js@^1.48.0", "@solana/web3.js@^1.50.1", "@solana/web3.js@^1.56.2", "@solana/web3.js@^1.59.1", "@solana/web3.js@^1.63.0", "@solana/web3.js@^1.63.1", "@solana/web3.js@^1.66.2", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.73.0", "@solana/web3.js@^1.73.2", "@solana/web3.js@^1.78.2", "@solana/web3.js@^1.78.3":
+"@solana/web3.js@1.56.0", "@solana/web3.js@1.73.3", "@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.22.0", "@solana/web3.js@^1.30.2", "@solana/web3.js@^1.31.0", "@solana/web3.js@^1.32.0", "@solana/web3.js@^1.35.1", "@solana/web3.js@^1.36.0", "@solana/web3.js@^1.37.1", "@solana/web3.js@^1.43.4", "@solana/web3.js@^1.44.3", "@solana/web3.js@^1.48.0", "@solana/web3.js@^1.50.1", "@solana/web3.js@^1.56.2", "@solana/web3.js@^1.59.1", "@solana/web3.js@^1.63.0", "@solana/web3.js@^1.63.1", "@solana/web3.js@^1.66.2", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.73.0", "@solana/web3.js@^1.73.2", "@solana/web3.js@^1.74.0", "@solana/web3.js@^1.78.2", "@solana/web3.js@^1.78.3":
   version "1.73.3"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.73.3.tgz#60e6bd68f6f364d4be360b1e0a03a0a68468a029"
   integrity sha512-vHRMo589XEIpoujpE2sZZ1aMZvfA1ImKfNxobzEFyMb+H5j6mRRUXfdgWD0qJ0sm11e5BcBC7HPeRXJB+7f3Lg==

@@ -12,7 +12,10 @@ function getStakeAccountLabelInfo(acc: StakeAccount | undefined) {
   let amount = ''
 
   if (acc?.stakeAccount) {
-    stakeAccount = acc.stakeAccount.toString()
+    stakeAccount =
+      acc.stakeAccount.toString() === web3.PublicKey.default.toString()
+        ? 'Marinade Native Stake Accounts'
+        : acc.stakeAccount.toString()
     accountStatus = acc.state == StakeState.Active ? 'Active' : 'Inactive'
     delegatedValidator = acc.delegatedValidator
       ? acc.delegatedValidator.toString()
