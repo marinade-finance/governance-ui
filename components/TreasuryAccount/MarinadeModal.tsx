@@ -125,11 +125,9 @@ const MarinadeModal = () => {
         })
       )
 
-      // ToDo: fix proposal infos not showing
-
       try {
         const proposalAddress = await handleCreateProposal({
-          title: form.title ?? proposalTitle,
+          title: form.title && form.title !== '' ? form.title : proposalTitle,
           description: form.description ?? '',
           governance: currentAccount?.governance,
           instructionsData: instructionsData,
@@ -182,7 +180,7 @@ const MarinadeModal = () => {
             }
             error={formErrors['destinationAccount']}
             noMaxWidth={true}
-          ></GovernedAccountSelect>
+          />
         )}
         <Input
           min={mintMinAmount}
