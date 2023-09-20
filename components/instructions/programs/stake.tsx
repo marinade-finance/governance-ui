@@ -1,9 +1,44 @@
-import { Connection, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { AccountMetaData } from '@solana/spl-governance'
 import * as BufferLayout from '@solana/buffer-layout'
 
 export const STAKE_INSTRUCTIONS = {
   Stake11111111111111111111111111111111111111: {
+    0: {
+      name: 'Stake Program - Initialize',
+      accounts: [{ name: 'Stake Account' }],
+      getDataUI: async (
+        _connection: Connection,
+        _data: Uint8Array,
+        _accounts: AccountMetaData[]
+      ) => {
+        const layout = BufferLayout.struct<any['Initialize']>([
+          BufferLayout.u32('type'),
+          BufferLayout.struct(
+            [
+              BufferLayout.blob(32, 'staker'),
+              BufferLayout.blob(32, 'withdrawer'),
+            ],
+            'authorized'
+          ),
+        ])
+
+        const decodedLayout = layout.decode(Buffer.from(_data))
+
+        return (
+          <>
+            <p>
+              Staker Authority:{' '}
+              {new PublicKey(decodedLayout.authorized.staker).toString()}
+            </p>
+            <p>
+              Withdrawer Authority:{' '}
+              {new PublicKey(decodedLayout.authorized.withdrawer).toString()}
+            </p>
+          </>
+        )
+      },
+    },
     3: {
       name: 'Stake Program - Split',
       accounts: [],
