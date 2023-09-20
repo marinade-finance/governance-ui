@@ -18,7 +18,6 @@ import ProgramsListItem from './ProgramsListItem'
 import UnknownAssetListItem from './UnknownAssetListItem'
 import RealmAuthorityListItem from './RealmAuthorityListItem'
 import StakeListItem from './StakeListItem'
-import { abbreviateAddress } from '@utils/formatting'
 
 interface Props {
   className?: string
