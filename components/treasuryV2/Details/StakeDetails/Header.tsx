@@ -4,7 +4,7 @@ import cx from 'classnames'
 import { Stake } from '@models/treasury/Asset'
 import Address from '@components/Address'
 import { DesktopComputerIcon } from '@heroicons/react/solid'
-import { PublicKey } from '@solana/web3.js'
+import { MARINADE_NATIVE_STAKING_AUTHORITY } from '@utils/marinade-native'
 
 interface Props {
   className?: string
@@ -60,8 +60,8 @@ export default function Header(props: Props) {
                   {props.account.amount}
                 </div>
               </div>
-              {props.account.pubkey.toString() ===
-              PublicKey.default.toString() ? (
+              {props.account.raw.extensions.stake?.stakingAuthority.toString() ===
+              MARINADE_NATIVE_STAKING_AUTHORITY.toString() ? (
                 <span className="text-xs text-white/50">
                   Marinade Native Stake Accounts
                 </span>

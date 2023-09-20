@@ -179,8 +179,8 @@ const DeactivateValidatorStake = ({
     const instructions: web3.TransactionInstruction[] = []
 
     if (
-      form.stakingAccount.stakeAccount.toString() !==
-      web3.PublicKey.default.toString()
+      form.stakingAccount.stakingAuthority.toString() !==
+      MARINADE_NATIVE_STAKING_AUTHORITY.toString()
     ) {
       instructions.push(
         ...web3.StakeProgram.deactivate({

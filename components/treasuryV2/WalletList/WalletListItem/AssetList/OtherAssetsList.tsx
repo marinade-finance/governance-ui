@@ -99,8 +99,9 @@ export default function OtherAssetsList(props: Props) {
                   key={i}
                   amount={asset.amount}
                   publicKey={asset.raw.extensions.stake?.stakeAccount.toString()}
+                  stakingAuthority={asset.raw.extensions.stake?.stakingAuthority.toString()}
                   onSelect={() => props.onSelect?.(asset)}
-                ></StakeListItem>
+                />
               )
             case AssetType.Unknown:
               return (
