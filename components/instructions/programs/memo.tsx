@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from '@solana/web3.js'
+import { Connection } from '@solana/web3.js'
 import { AccountMetaData } from '@solana/spl-governance'
 import * as BufferLayout from '@solana/buffer-layout'
 

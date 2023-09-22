@@ -193,7 +193,7 @@ const DeactivateValidatorStake = ({
       )
     } else {
       const mNativeSdk = new NativeStakingSDK()
-      const { payFees, onPaid } = await mNativeSdk.initPrepareForRevoke(
+      const { payFees } = await mNativeSdk.initPrepareForRevoke(
         form.governedTokenAccount.pubkey
       )
 
