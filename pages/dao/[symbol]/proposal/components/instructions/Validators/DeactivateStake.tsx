@@ -154,17 +154,14 @@ const DeactivateValidatorStake = ({
     return true
   }
 
-  async function getInstruction(): Promise<UiInstruction[]> {
+  async function getInstruction(): Promise<UiInstruction> {
     const isValid = await validateInstruction()
-    const returnInvalid = (): UiInstruction[] => {
-      return [
-        {
-          serializedInstruction: '',
-          isValid: false,
-          governance: undefined,
-        },
-      ]
-    }
+    const returnInvalid = (): UiInstruction => ({
+      serializedInstruction: '',
+      isValid: false,
+      governance: undefined,
+    })
+
     if (
       !connection ||
       !isValid ||
@@ -176,31 +173,39 @@ const DeactivateValidatorStake = ({
       return returnInvalid()
     }
 
-    const instructions: web3.TransactionInstruction[] = []
+    const instruction: UiInstruction = {
+      serializedInstruction: '',
+      isValid: true,
+      governance: form.governedTokenAccount!.governance,
+    }
 
     if (
       form.stakingAccount.stakingAuthority.toString() !==
       MARINADE_NATIVE_STAKING_AUTHORITY.toString()
     ) {
-      instructions.push(
-        ...web3.StakeProgram.deactivate({
-          stakePubkey: form.stakingAccount.stakeAccount,
-          authorizedPubkey: form.governedTokenAccount.pubkey,
-        }).instructions
+      const instructions = web3.StakeProgram.deactivate({
+        stakePubkey: form.stakingAccount.stakeAccount,
+        authorizedPubkey: form.governedTokenAccount.pubkey,
+      }).instructions
+
+      instruction.serializedInstruction = serializeInstructionToBase64(
+        instructions[0]
       )
     } else {
       const mNativeSdk = new NativeStakingSDK()
-      const { payFees } = await mNativeSdk.initPrepareForRevoke(
+      const { payFees, onPaid } = await mNativeSdk.initPrepareForRevoke(
         form.governedTokenAccount.pubkey
       )
-      instructions.push(...payFees)
+
+      instruction.serializedInstruction = serializeInstructionToBase64(
+        payFees[0]
+      )
+      instruction.additionalSerializedInstructions = [
+        serializeInstructionToBase64(payFees[1]),
+      ]
     }
 
-    return instructions.map((ix) => ({
-      serializedInstruction: serializeInstructionToBase64(ix),
-      isValid: true,
-      governance: form.governedTokenAccount!.governance,
-    }))
+    return instruction
   }
 
   useEffect(() => {
