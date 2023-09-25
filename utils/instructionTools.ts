@@ -266,7 +266,7 @@ export async function getMarinadeNativeStakeInstruction({
       StakeProgram.programId
     )
 
-    let tx = StakeProgram.createAccountWithSeed({
+    const tx = StakeProgram.createAccountWithSeed({
       fromPubkey: originWallet,
       stakePubkey: seededAddress,
       basePubkey: originWallet,
