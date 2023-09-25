@@ -126,6 +126,7 @@ const WithdrawValidatorStake = ({
         stakeAccount: x.publicKey,
         state: StakeState.Inactive,
         delegatedValidator: web3.PublicKey.default,
+        stakingAuthority: web3.PublicKey.default,
         amount: x.accountInfo.lamports / web3.LAMPORTS_PER_SOL,
       }
     })

@@ -7,8 +7,10 @@ import {
 } from '@solana/spl-token'
 import { WalletAdapter } from '@solana/wallet-adapter-base'
 import {
+  Authorized,
   Keypair,
   PublicKey,
+  StakeProgram,
   SystemProgram,
   TransactionInstruction,
 } from '@solana/web3.js'
@@ -29,6 +31,7 @@ import {
 } from '@metaplex-foundation/mpl-token-metadata'
 import { findMetadataPda } from '@metaplex-foundation/js'
 import { lidoStake } from '@utils/lidoStake'
+import { MARINADE_NATIVE_STAKING_AUTHORITY } from './marinade-native'
 
 export const validateInstruction = async ({
   schema,
@@ -234,6 +237,64 @@ export async function getMintInstruction({
     prerequisiteInstructions: prerequisiteInstructions,
   }
   return obj
+}
+
+export async function getMarinadeNativeStakeInstruction({
+  schema,
+  form,
+  wallet,
+  setFormErrors,
+}: {
+  schema: any
+  form: any
+  wallet: WalletAdapter | undefined
+  setFormErrors: any
+}): Promise<UiInstruction[]> {
+  const isValid = await validateInstruction({ schema, form, setFormErrors })
+  const instructions: UiInstruction[] = []
+
+  const originWallet = form.governedTokenAccount.extensions.transferAddress
+  if (isValid && originWallet instanceof PublicKey && wallet?.publicKey) {
+    const amount = getMintNaturalAmountFromDecimal(
+      form.amount,
+      form.governedTokenAccount.extensions.mint.account.decimals
+    )
+
+    const seed = 'nativestaking' + Date.now().toString()
+    const seededAddress = await PublicKey.createWithSeed(
+      originWallet,
+      seed,
+      StakeProgram.programId
+    )
+
+    const tx = StakeProgram.createAccountWithSeed({
+      fromPubkey: originWallet,
+      stakePubkey: seededAddress,
+      basePubkey: originWallet,
+      seed,
+      authorized: new Authorized(
+        MARINADE_NATIVE_STAKING_AUTHORITY,
+        form.governedTokenAccount.pubkey
+      ),
+      lamports: amount,
+    })
+
+    if (tx.instructions.length !== 2) {
+      throw Error('Something went wrong while generating instructions!')
+    }
+
+    tx.instructions.forEach((i) => {
+      const serializedInstruction = serializeInstructionToBase64(i)
+
+      instructions.push({
+        serializedInstruction: serializedInstruction,
+        isValid,
+        governance: form.governedTokenAccount?.governance,
+      })
+    })
+  }
+
+  return instructions
 }
 
 export async function getConvertToMsolInstruction({

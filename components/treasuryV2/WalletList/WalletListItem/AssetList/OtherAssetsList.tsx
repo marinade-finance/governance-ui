@@ -18,7 +18,6 @@ import ProgramsListItem from './ProgramsListItem'
 import UnknownAssetListItem from './UnknownAssetListItem'
 import RealmAuthorityListItem from './RealmAuthorityListItem'
 import StakeListItem from './StakeListItem'
-import { abbreviateAddress } from '@utils/formatting'
 
 interface Props {
   className?: string
@@ -99,12 +98,10 @@ export default function OtherAssetsList(props: Props) {
                 <StakeListItem
                   key={i}
                   amount={asset.amount}
-                  publicKey={
-                    asset.raw.extensions.stake?.stakeAccount &&
-                    abbreviateAddress(asset.raw.extensions.stake.stakeAccount!)
-                  }
+                  publicKey={asset.raw.extensions.stake?.stakeAccount.toString()}
+                  stakingAuthority={asset.raw.extensions.stake?.stakingAuthority.toString()}
                   onSelect={() => props.onSelect?.(asset)}
-                ></StakeListItem>
+                />
               )
             case AssetType.Unknown:
               return (

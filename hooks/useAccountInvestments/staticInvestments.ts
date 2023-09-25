@@ -8,8 +8,7 @@ export const getSolInvestments = () => [
     handledTokenSymbol: '',
     handledTokenImgSrc:
       'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
-    protocolLogoSrc:
-      'https://raw.githubusercontent.com/LP-Finance-Inc/token-image/main/msol.png',
+    protocolLogoSrc: '/realms/MNDE/img/mnde_logo.png',
     strategyName: 'Stake',
     strategyDescription: '',
     createProposalFcn: () => null,

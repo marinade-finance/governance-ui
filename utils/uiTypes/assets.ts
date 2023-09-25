@@ -116,6 +116,7 @@ export class AccountTypeStake implements AssetAccount {
     stakePk: PublicKey,
     state: StakeState,
     delegatedValidator: PublicKey | null,
+    stakingAuthority: PublicKey,
     amount: number
   ) {
     this.governance = governance
@@ -126,6 +127,7 @@ export class AccountTypeStake implements AssetAccount {
         stakeAccount: stakePk,
         state: state,
         delegatedValidator: delegatedValidator,
+        stakingAuthority: stakingAuthority,
         amount: amount,
       },
     }
@@ -225,5 +227,6 @@ export interface StakeAccount {
   stakeAccount: PublicKey
   state: StakeState
   delegatedValidator: PublicKey | null
+  stakingAuthority: PublicKey
   amount: number
 }

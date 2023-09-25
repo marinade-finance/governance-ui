@@ -25,6 +25,7 @@ import { StakeAccount, StakeState } from '@utils/uiTypes/assets'
 import { parseMintNaturalAmountFromDecimal } from '@tools/sdk/units'
 import { getFilteredProgramAccounts } from '@utils/helpers'
 import useLegacyConnectionContext from '@hooks/useLegacyConnectionContext'
+import { isMNativeStakeAccount } from '@utils/marinade-native'
 
 const SplitStake = ({
   index,
@@ -120,13 +121,20 @@ const SplitStake = ({
       })
     )
 
-    return stakingAccounts.map((x) => {
-      return {
-        stakeAccount: x.publicKey,
-        state: StakeState.Inactive,
-        delegatedValidator: web3.PublicKey.default,
-        amount: x.accountInfo.lamports / web3.LAMPORTS_PER_SOL,
+    return stakingAccounts.flatMap((x) => {
+      if (isMNativeStakeAccount(x.accountInfo.data)) {
+        return []
       }
+
+      return [
+        {
+          stakeAccount: x.publicKey,
+          state: StakeState.Inactive,
+          delegatedValidator: web3.PublicKey.default,
+          stakingAuthority: web3.PublicKey.default,
+          amount: x.accountInfo.lamports / web3.LAMPORTS_PER_SOL,
+        },
+      ]
     })
   }
 

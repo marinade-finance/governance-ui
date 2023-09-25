@@ -11,7 +11,7 @@ import { Status } from '@utils/uiTypes/Result'
 import { StrategyCard } from '@components/TreasuryAccount/AccountOverview'
 import DepositModal from 'Strategies/components/DepositModal'
 import Modal from '@components/Modal'
-import ConvertToMsol from '@components/TreasuryAccount/ConvertToMsol'
+import MarinadeModal from '@components/TreasuryAccount/MarinadeModal'
 import ConvertToStSol from '@components/TreasuryAccount/ConvertToStSol'
 import Trade from '@components/TreasuryAccount/Trade'
 import useTreasuryAccountStore from 'stores/useTreasuryAccountStore'
@@ -210,7 +210,7 @@ export default function Investments(props: Props) {
               sizeClassName="sm:max-w-3xl"
               onClose={() => setAlternativeInvestment(null)}
             >
-              <ConvertToMsol />
+              <MarinadeModal />
             </Modal>
           )}
           {alternativeInvestment === 'Lido' && (

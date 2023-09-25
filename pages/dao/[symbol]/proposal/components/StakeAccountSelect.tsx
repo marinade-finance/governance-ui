@@ -4,6 +4,7 @@ import { ProgramAccount } from '@solana/spl-governance'
 import { useEffect } from 'react'
 import { web3 } from '@coral-xyz/anchor'
 import { StakeAccount, StakeState } from '@utils/uiTypes/assets'
+import { MARINADE_NATIVE_STAKING_AUTHORITY } from '@utils/marinade-native'
 
 function getStakeAccountLabelInfo(acc: StakeAccount | undefined) {
   let stakeAccount = ''
@@ -12,7 +13,11 @@ function getStakeAccountLabelInfo(acc: StakeAccount | undefined) {
   let amount = ''
 
   if (acc?.stakeAccount) {
-    stakeAccount = acc.stakeAccount.toString()
+    stakeAccount =
+      acc.stakingAuthority.toString() ===
+      MARINADE_NATIVE_STAKING_AUTHORITY.toString()
+        ? 'Marinade Native Stake Accounts'
+        : acc.stakeAccount.toString()
     accountStatus = acc.state == StakeState.Active ? 'Active' : 'Inactive'
     delegatedValidator = acc.delegatedValidator
       ? acc.delegatedValidator.toString()

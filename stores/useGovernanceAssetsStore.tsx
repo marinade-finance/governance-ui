@@ -51,6 +51,7 @@ import {
 import group from '@utils/group'
 import { getFilteredProgramAccounts } from '@utils/helpers'
 import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
+import { MARINADE_NATIVE_STAKING_AUTHORITY } from '@utils/marinade-native'
 
 const additionalPossibleMintAccounts = {
   Mango: [
@@ -884,7 +885,7 @@ const loadStakeAccounts = async (
     x.map((stake) => ({ ...stake, governance: solAccounts[idx].governance }))
   )
 
-  return [
+  const allStakeAccounts = [
     ...accountsNotYetStakedMapped.map(
       (x) =>
         new AccountTypeStake(
@@ -892,6 +893,7 @@ const loadStakeAccounts = async (
           x.publicKey,
           StakeState.Inactive,
           null,
+          PublicKey.decode(x.accountInfo.data.slice(12, 12 + 32).reverse()),
           x.accountInfo.lamports / LAMPORTS_PER_SOL
         )
     ),
@@ -902,10 +904,39 @@ const loadStakeAccounts = async (
           x.publicKey,
           StakeState.Active,
           PublicKey.decode(x.accountInfo.data.slice(124, 124 + 32)),
+          PublicKey.decode(x.accountInfo.data.slice(12, 12 + 32).reverse()),
           x.accountInfo.lamports / LAMPORTS_PER_SOL
         )
     ),
   ]
+
+  const combinedStakeAccounts: AccountTypeStake[] = []
+  let mNativeStakeAccounts: AccountTypeStake | undefined
+
+  allStakeAccounts.forEach((sa) => {
+    if (
+      sa.extensions.stake?.stakingAuthority.toString() !==
+      MARINADE_NATIVE_STAKING_AUTHORITY.toString()
+    ) {
+      combinedStakeAccounts.push(sa)
+    } else {
+      mNativeStakeAccounts = new AccountTypeStake(
+        sa.governance,
+        PublicKey.default,
+        sa.extensions.stake.state,
+        null,
+        sa.extensions.stake.stakingAuthority,
+        (mNativeStakeAccounts?.extensions.stake?.amount ?? 0) +
+          sa.extensions.stake.amount
+      )
+    }
+  })
+
+  if (mNativeStakeAccounts) {
+    combinedStakeAccounts.push(mNativeStakeAccounts)
+  }
+
+  return combinedStakeAccounts
 }
 
 const getAccountsForGovernances = async (
