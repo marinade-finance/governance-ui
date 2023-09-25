@@ -1,7 +1,4 @@
-import {
-  serializeInstructionToBase64,
-  SYSTEM_PROGRAM_ID,
-} from '@solana/spl-governance'
+import { serializeInstructionToBase64 } from '@solana/spl-governance'
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,

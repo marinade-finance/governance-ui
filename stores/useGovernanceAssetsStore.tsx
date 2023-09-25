@@ -47,7 +47,6 @@ import {
   GovernanceProgramAccountWithNativeTreasuryAddress,
   AccountTypeStake,
   StakeState,
-  StakeAccount,
 } from '@utils/uiTypes/assets'
 import group from '@utils/group'
 import { getFilteredProgramAccounts } from '@utils/helpers'
