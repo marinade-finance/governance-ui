@@ -31,6 +31,7 @@ import {
 } from '@metaplex-foundation/mpl-token-metadata'
 import { findMetadataPda } from '@metaplex-foundation/js'
 import { lidoStake } from '@utils/lidoStake'
+import { MARINADE_NATIVE_STAKING_AUTHORITY } from './marinade-native'
 
 export const validateInstruction = async ({
   schema,
@@ -272,7 +273,7 @@ export async function getMarinadeNativeStakeInstruction({
       basePubkey: originWallet,
       seed,
       authorized: new Authorized(
-        new PublicKey('stWirqFCf2Uts1JBL1Jsd3r6VBWhgnpdPxCTe1MFjrq'),
+        MARINADE_NATIVE_STAKING_AUTHORITY,
         form.governedTokenAccount.pubkey
       ),
       lamports: amount,

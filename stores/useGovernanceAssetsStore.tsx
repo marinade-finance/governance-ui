@@ -51,6 +51,7 @@ import {
 import group from '@utils/group'
 import { getFilteredProgramAccounts } from '@utils/helpers'
 import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
+import { MARINADE_NATIVE_STAKING_AUTHORITY } from '@utils/marinade-native'
 
 const additionalPossibleMintAccounts = {
   Mango: [
@@ -915,7 +916,7 @@ const loadStakeAccounts = async (
   allStakeAccounts.forEach((sa) => {
     if (
       sa.extensions.stake?.stakingAuthority.toString() !==
-      'stWirqFCf2Uts1JBL1Jsd3r6VBWhgnpdPxCTe1MFjrq'
+      MARINADE_NATIVE_STAKING_AUTHORITY.toString()
     ) {
       combinedStakeAccounts.push(sa)
     } else {
