@@ -2187,19 +2187,20 @@
     "@coral-xyz/anchor" "^0.27.0"
     bs58 "^5.0.0"
 
-"@marinade.finance/marinade-ts-sdk@5.0.4":
-  version "5.0.4"
-  resolved "https://registry.yarnpkg.com/@marinade.finance/marinade-ts-sdk/-/marinade-ts-sdk-5.0.4.tgz#25c64844103e246a5eff030c561809e32e0641ce"
-  integrity sha512-Yc7E6IkXAjHLjnBrIZhCqv+1+7kAPnUMYPHfv7XH1/ksr5T9TJzPUp+MzjzGV3waxujyEzJ8LIj5JvR7/HqL1A==
+"@marinade.finance/marinade-ts-sdk@5.0.5":
+  version "5.0.5"
+  resolved "https://registry.yarnpkg.com/@marinade.finance/marinade-ts-sdk/-/marinade-ts-sdk-5.0.5.tgz#5e31dcb6c8b21e6d92ba6165e5fcd5f2455a5c8e"
+  integrity sha512-9dMdR7/Qfr1Dl4nyLQG+fue+XHxRTWaWH7Lujjz2AxwEvM8uSEET3up86ldQMGARANtvtNDxvfA5s6fdB8Bl9A==
   dependencies:
     "@coral-xyz/anchor" "^0.28.0"
     "@marinade.finance/directed-stake-sdk" "^0.0.4"
+    "@marinade.finance/native-staking-sdk" "^1.0.0"
     "@solana/spl-stake-pool" "^0.6.5"
     "@solana/spl-token-3.x" "npm:@solana/spl-token@^0.3.8"
     borsh "^0.7.0"
     bs58 "^5.0.0"
 
-"@marinade.finance/native-staking-sdk@1.0.0":
+"@marinade.finance/native-staking-sdk@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@marinade.finance/native-staking-sdk/-/native-staking-sdk-1.0.0.tgz#9ce0f377f0924dab7e0edf67677fa68db2a9efaf"
   integrity sha512-Cj2dy3SH9LAgcFBpGEgRHyF/nK+L7SfNIHkGqAZYRDVgn/h7u8bqKNkYqKXgCWbA5WwPmJzugWWm1DxEt7LyPQ==
@@ -6302,12 +6303,12 @@ ansi-escapes@^4.2.1:
   dependencies:
     type-fest "^0.21.3"
 
-ansi-regex@3.0.1:
+ansi-regex@3.0.1, ansi-regex@^2.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/ansi-regex/-/ansi-regex-3.0.1.tgz#123d6479e92ad45ad897d4054e3c7ca7db4944e1"
   integrity sha512-+O9Jct8wf++lXxxFc4hc8LsjaSq0HFzzL7cVsw8pRDIPdjKD2mT4ytDZlLuSBZ4cLKZFXIrMGO7DbQCtMJJMKw==
 
-"ansi-regex@>=3.0.1 <=5.0.1", ansi-regex@^2.0.0, ansi-regex@^3.0.0, ansi-regex@^4.1.0, ansi-regex@^5.0.0, ansi-regex@^5.0.1:
+"ansi-regex@>=3.0.1 <=5.0.1", ansi-regex@^3.0.0, ansi-regex@^4.1.0, ansi-regex@^5.0.0, ansi-regex@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/ansi-regex/-/ansi-regex-5.0.1.tgz#082cb2c89c9fe8659a311a53bd6a4dc5301db304"
   integrity sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==

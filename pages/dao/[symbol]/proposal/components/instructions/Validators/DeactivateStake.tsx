@@ -13,10 +13,11 @@ import {
   ValidatorDeactivateStakeForm,
 } from '@utils/uiTypes/proposalCreationTypes'
 import { NewProposalContext } from '../../../new'
-import { web3 } from '@coral-xyz/anchor'
+import { BN, web3 } from '@coral-xyz/anchor'
 import useGovernanceAssets from '@hooks/useGovernanceAssets'
 import GovernedAccountSelect from '../../GovernedAccountSelect'
 import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
+import { getPrepareNativeUnstakeSOLIx } from '@marinade.finance/marinade-ts-sdk/'
 import { StakeAccount, StakeState } from '@utils/uiTypes/assets'
 import StakeAccountSelect from '../../StakeAccountSelect'
 import { getFilteredProgramAccounts } from '@utils/helpers'
@@ -25,7 +26,6 @@ import {
   MARINADE_NATIVE_STAKING_AUTHORITY,
   isMNativeStakeAccount,
 } from '@utils/marinade-native'
-import { NativeStakingSDK } from '@marinade.finance/native-staking-sdk'
 
 const DeactivateValidatorStake = ({
   index,
@@ -192,9 +192,9 @@ const DeactivateValidatorStake = ({
         instructions[0]
       )
     } else {
-      const mNativeSdk = new NativeStakingSDK()
-      const { payFees } = await mNativeSdk.initPrepareForRevoke(
-        form.governedTokenAccount.pubkey
+      const { payFees } = await getPrepareNativeUnstakeSOLIx(
+        form.governedTokenAccount.pubkey,
+        new BN(form.governedTokenAccount.extensions.amount ?? 0)
       )
 
       instruction.serializedInstruction = serializeInstructionToBase64(
