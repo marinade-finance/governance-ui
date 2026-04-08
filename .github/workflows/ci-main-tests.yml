@@ -36,7 +36,7 @@ jobs:
 
       # Report all vulnerabilities GitHub security tab
       - name: Report on all vulnerabilities
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # master
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           scan-type: 'fs'
           ignore-unfixed: true
@@ -44,9 +44,9 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
 
-      # Fail the job on critical vulnerabiliies with fix available
+      # Fail the job on critical vulnerabilities with fix available
       - name: Fail on critical vulnerabilities
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # master
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           scan-type: 'fs'
           ignore-unfixed: true
