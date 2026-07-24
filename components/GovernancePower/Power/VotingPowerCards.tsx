@@ -11,6 +11,8 @@ import { VanillaCard } from '@components/GovernancePower/Power/Vanilla/VanillaCa
 import DriftVotingPower from 'DriftStakeVoterPlugin/components/DriftVotingPower'
 import TokenHaverVotingPower from '@components/ProposalVotingPower/TokenHaverVotingPower'
 import ParclVotingPower from 'ParclVotePlugin/components/ParclVotingPower'
+import BonkBalanceCard from 'BonkVotePlugin/components/BalanceCard'
+import TokenVoterBalanceCard from 'TokenVoterPlugin/components/BalanceCard'
 
 /****
  * Note to plugin implementors.
@@ -20,7 +22,7 @@ import ParclVotingPower from 'ParclVotePlugin/components/ParclVotingPower'
  *
  ***/
 
-// A list of all the plugins that have a dedicated voting power UI in realms.
+// A list of all the plugins that have a dedicated voting power ui in realms.
 // Plugins will use the vanilla voting power UI if they are not in this list.
 // The vanilla voting power UI will:
 // - assume the user can "deposit" tokens into the DAO
@@ -36,7 +38,9 @@ const pluginsWithDedicatedVotingPowerUI = [
   'QV',
   'drift',
   'token_haver',
-  "parcl"
+  'parcl',
+  'bonk',
+  'token_voter'
 ] as const
 
 export type VotingCardProps = {
@@ -51,14 +55,16 @@ export type VotingCardProps = {
 // - narrow the type to a plugin that requires a dedicated UI
 // - adding to the pluginsWithDedicatedVotingPowerUI list forces the CardForPlugin component to be updated
 const hasDedicatedVotingPowerUI = (
-  plugin: PluginName
-): plugin is typeof pluginsWithDedicatedVotingPowerUI[number] =>
+  plugin: PluginName,
+): plugin is (typeof pluginsWithDedicatedVotingPowerUI)[number] =>
   pluginsWithDedicatedVotingPowerUI.includes(
-    plugin as typeof pluginsWithDedicatedVotingPowerUI[number]
+    plugin as (typeof pluginsWithDedicatedVotingPowerUI)[number],
   )
 
 const CardForPlugin: FC<
-  { plugin: typeof pluginsWithDedicatedVotingPowerUI[number] } & VotingCardProps
+  {
+    plugin: (typeof pluginsWithDedicatedVotingPowerUI)[number]
+  } & VotingCardProps
 > = ({ plugin, role, ...props }) => {
   switch (plugin) {
     case 'NFT':
@@ -79,6 +85,10 @@ const CardForPlugin: FC<
       return <TokenHaverVotingPower role={role} />
     case 'parcl':
       return <ParclVotingPower role={role} />
+    case 'bonk':
+      return <BonkBalanceCard role={role} />
+    case 'token_voter':
+      return <TokenVoterBalanceCard role={role} />
   }
 }
 
@@ -100,13 +110,16 @@ export const VotingPowerCards: FC<VotingCardProps> = (props) => {
     .filter(Boolean) // filter out undefined
 
   const includesUnrecognizedPlugin = plugins?.voterWeight.some(
-    (plugin) => plugin.name === 'unknown'
+    (plugin) => plugin.name === 'unknown',
   )
 
   if (!cards.length) {
     // No dedicated plugin cards - add the vanilla card
     cards.push(
-      <VanillaCard unrecognizedPlugin={includesUnrecognizedPlugin} {...props} />
+      <VanillaCard
+        unrecognizedPlugin={includesUnrecognizedPlugin}
+        {...props}
+      />,
     )
   }
 

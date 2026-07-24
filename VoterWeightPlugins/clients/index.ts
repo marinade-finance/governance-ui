@@ -15,6 +15,8 @@ import { HeliumVsrClient } from '../../HeliumVotePlugin/sdk/client'
 import { UnrecognisedVoterWeightPluginClient } from './UnrecognisedVoterWeightPluginClient'
 import { DriftVoterClient } from 'DriftStakeVoterPlugin/DriftVoterClient'
 import { TokenHaverClient } from 'TokenHaverPlugin/TokenHaverClient'
+import { BonkClient } from 'BonkVotePlugin/client'
+import { TokenVoterClient } from 'TokenVoterPlugin/client'
 
 /**
  * Given a plugin name and program ID, load the appropriate client
@@ -28,7 +30,7 @@ export const loadClient = (
   plugin: PluginName,
   programId: PublicKey,
   provider: Provider,
-  signer: Wallet
+  signer: Wallet,
 ): Promise<Client<any>> => {
   switch (plugin) {
     case 'QV':
@@ -49,6 +51,10 @@ export const loadClient = (
       return TokenHaverClient.connect(provider, programId)
     case 'parcl':
       return ParclVoterWeightPluginClient.connect(provider, undefined, signer)
+    case 'bonk':
+      return BonkClient.connect(provider, programId)
+    case 'token_voter':
+      return TokenVoterClient.connect(provider)
     default:
       return UnrecognisedVoterWeightPluginClient.connect(provider, programId)
   }

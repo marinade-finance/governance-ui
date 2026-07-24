@@ -15,9 +15,7 @@ import {
   withAddSignatory,
   RpcContext,
 } from '@solana/spl-governance'
-import {
-  withCreateProposal
-} from '@realms-today/spl-governance'
+import { withCreateProposal } from '@realms-today/spl-governance'
 import {
   sendTransactionsV3,
   SequenceType,
@@ -46,7 +44,7 @@ export const createLUTProposal = async (
   isDraft: boolean,
   options: string[],
   client?: VotingClient,
-  callbacks?: Parameters<typeof sendTransactionsV3>[0]['callbacks']
+  callbacks?: Parameters<typeof sendTransactionsV3>[0]['callbacks'],
 ): Promise<PublicKey> => {
   // Assumption:
   // `payer` is a valid `Keypair` with enough SOL to pay for the execution
@@ -74,7 +72,7 @@ export const createLUTProposal = async (
   //will run only if plugin is connected with realm
   const plugin = await client?.withUpdateVoterWeightRecord(
     instructions,
-    'createProposal'
+    'createProposal',
   )
 
   const proposalAddress = await withCreateProposal(
@@ -93,7 +91,7 @@ export const createLUTProposal = async (
     options,
     useDenyOption,
     payer,
-    plugin?.voterWeightPk
+    plugin?.voterWeightPk,
   )
 
   await withAddSignatory(
@@ -104,14 +102,14 @@ export const createLUTProposal = async (
     tokenOwnerRecord.pubkey,
     governanceAuthority,
     signatory,
-    payer
+    payer,
   )
 
   // TODO: Return signatoryRecordAddress from the SDK call
   const signatoryRecordAddress = await getSignatoryRecordAddress(
     programId,
     proposalAddress,
-    signatory
+    signatory,
   )
 
   const insertInstructions: TransactionInstruction[] = []
@@ -131,7 +129,7 @@ export const createLUTProposal = async (
       }
       if (instruction.prerequisiteInstructionsSigners) {
         prerequisiteInstructionsSigners.push(
-          ...instruction.prerequisiteInstructionsSigners
+          ...instruction.prerequisiteInstructionsSigners,
         )
       }
       await withInsertTransaction(
@@ -146,7 +144,7 @@ export const createLUTProposal = async (
         0,
         instruction.holdUpTime || 0,
         [instruction.data],
-        payer
+        payer,
       )
     }
   }
@@ -161,7 +159,7 @@ export const createLUTProposal = async (
       proposalAddress,
       signatory,
       signatoryRecordAddress,
-      undefined
+      undefined,
     )
   }
 
@@ -172,12 +170,11 @@ export const createLUTProposal = async (
   signerChunks.fill([])
 
   const deduplicatedPrerequisiteInstructions = prerequisiteInstructions.filter(
-    deduplicateObjsFilter
+    deduplicateObjsFilter,
   )
 
-  const deduplicatedPrerequisiteInstructionsSigners = prerequisiteInstructionsSigners.filter(
-    deduplicateObjsFilter
-  )
+  const deduplicatedPrerequisiteInstructionsSigners =
+    prerequisiteInstructionsSigners.filter(deduplicateObjsFilter)
 
   const signersSet = [
     ...chunks([...deduplicatedPrerequisiteInstructionsSigners], lowestChunkBy),
@@ -194,7 +191,7 @@ export const createLUTProposal = async (
       instructionsSet: txBatchesToInstructionSetWithSigners(
         txBatch,
         signersSet,
-        batchIdx
+        batchIdx,
       ),
       sequenceType: SequenceType.Sequential,
     }
@@ -203,21 +200,19 @@ export const createLUTProposal = async (
   const keys = txes
     .map((x) =>
       x.instructionsSet.map((y) =>
-        y.transactionInstruction.keys.map((z) => z.pubkey)
-      )
+        y.transactionInstruction.keys.map((z) => z.pubkey),
+      ),
     )
     .flat()
     .flat()
   const slot = await connection.getSlot()
 
-  const [
-    lookupTableInst,
-    lookupTableAddress,
-  ] = AddressLookupTableProgram.createLookupTable({
-    authority: payer,
-    payer: payer,
-    recentSlot: slot,
-  })
+  const [lookupTableInst, lookupTableAddress] =
+    AddressLookupTableProgram.createLookupTable({
+      authority: payer,
+      payer: payer,
+      recentSlot: slot,
+    })
 
   // add addresses to the `lookupTableAddress` table via an `extend` instruction
   // need to split into multiple instructions because of the ~20 address limit
@@ -234,7 +229,7 @@ export const createLUTProposal = async (
       authority: payer,
       lookupTable: lookupTableAddress,
       addresses: chunk,
-    })
+    }),
   )
 
   // Send this `extendInstruction` in a transaction to the cluster

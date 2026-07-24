@@ -14,14 +14,15 @@ import { getDualFinanceStakingOptionSchema } from '@utils/validations'
 import Tooltip from '@components/Tooltip'
 import useWalletOnePointOh from '@hooks/useWalletOnePointOh'
 import useLegacyConnectionContext from '@hooks/useLegacyConnectionContext'
-import { getTreasuryAccountItemInfoV2 } from '@utils/treasuryTools'
+import { getTreasuryAccountItemInfoV2Async } from '@utils/treasuryTools'
+import { AssetAccount } from '@utils/uiTypes/assets'
 
 interface MintMetadata {
-  logo: string,
-  name: string,
-  symbol: string,
-  displayPrice: string,
-  decimals: number,
+  logo: string
+  name: string
+  symbol: string
+  displayPrice: string
+  decimals: number
 }
 
 const StakingOption = ({
@@ -60,7 +61,35 @@ const StakingOption = ({
     setFormErrors({})
     setForm({ ...form, [propertyName]: value })
   }
-  const schema = getDualFinanceStakingOptionSchema({form, connection});
+  const schema = getDualFinanceStakingOptionSchema({ form, connection })
+  const getAssetAccountMetadata = async (
+    mintAssetAccount: AssetAccount,
+    base: boolean
+  ) => {
+    const {
+      logo,
+      name,
+      symbol,
+      displayPrice,
+    } = await getTreasuryAccountItemInfoV2Async(mintAssetAccount)
+    if (base) {
+      setBaseMetadata({
+        logo,
+        name,
+        symbol,
+        displayPrice,
+        decimals: mintAssetAccount.extensions.mint!.account.decimals,
+      })
+    } else {
+      setQuoteMetadata({
+        logo,
+        name,
+        symbol,
+        displayPrice,
+        decimals: mintAssetAccount.extensions.mint!.account.decimals,
+      })
+    }
+  }
   useEffect(() => {
     function getInstruction(): Promise<UiInstruction> {
       return getConfigInstruction({
@@ -73,42 +102,8 @@ const StakingOption = ({
     }
     handleSetInstructions(
       { governedAccount: governedAccount, getInstruction },
-      index
+      index,
     )
-    if (form.baseTreasury && form.baseTreasury.extensions.mint && form.baseTreasury.extensions.mint.account.decimals) {
-      const {
-        logo,
-        name,
-        symbol,
-        displayPrice,
-      } = getTreasuryAccountItemInfoV2(form.baseTreasury)
-      setBaseMetadata({
-        logo,
-        name,
-        symbol,
-        displayPrice,
-        decimals: form.baseTreasury.extensions.mint.account.decimals
-      })
-    } else {
-      setBaseMetadata(undefined)
-    }
-    if (form.quoteTreasury && form.quoteTreasury.extensions.mint && form.quoteTreasury.extensions.mint.account.decimals) {
-      const {
-        logo,
-        name,
-        symbol,
-        displayPrice,
-      } = getTreasuryAccountItemInfoV2(form.quoteTreasury)
-      setQuoteMetadata({
-        logo,
-        name,
-        symbol,
-        displayPrice,
-        decimals: form.quoteTreasury.extensions.mint.account.decimals
-      })
-    } else {
-      setQuoteMetadata(undefined)
-    }
   }, [
     form,
     governedAccount,
@@ -119,6 +114,24 @@ const StakingOption = ({
     wallet,
   ])
   useEffect(() => {
+    if (
+      form.baseTreasury &&
+      form.baseTreasury.extensions.mint &&
+      form.baseTreasury.extensions.mint.account.decimals
+    ) {
+      getAssetAccountMetadata(form.baseTreasury, true)
+    } else {
+      setBaseMetadata(undefined)
+    }
+    if (
+      form.quoteTreasury &&
+      form.quoteTreasury.extensions.mint &&
+      form.quoteTreasury.extensions.mint.account.decimals
+    ) {
+      getAssetAccountMetadata(form.quoteTreasury, false)
+    } else {
+      setQuoteMetadata(undefined)
+    }
     setGovernedAccount(form.baseTreasury?.governance)
   }, [form.baseTreasury])
 
@@ -227,7 +240,7 @@ const StakingOption = ({
             (x) =>
               x.isSol &&
               form.baseTreasury?.governance &&
-              x.governance.pubkey.equals(form.baseTreasury.governance.pubkey)
+              x.governance.pubkey.equals(form.baseTreasury.governance.pubkey),
           )}
           onChange={(value) => {
             handleSetForm({ value, propertyName: 'payer' })
@@ -255,26 +268,27 @@ const StakingOption = ({
       {baseMetadata && quoteMetadata && (
         <>
           <div className="p-3 border rounded-lg text-fgd-1 border-fgd-4 w-full">
-          {form.strike / form.lotSize * 10 ** (-quoteMetadata.decimals + baseMetadata.decimals) * (Number(form.numTokens) / 10 ** baseMetadata.decimals)}
-          <img
-            className={`h-6 w-6`}
-            src={quoteMetadata.logo}
-            onError={({ currentTarget }) => {
-              currentTarget.onerror = null // prevents looping
-              currentTarget.hidden = true
-            }}
-          />
-          =
-          {Number(form.numTokens) / 10 ** baseMetadata.decimals}
-          <img
-            className={`h-6 w-6`}
-            src={baseMetadata.logo}
-            onError={({ currentTarget }) => {
-              currentTarget.onerror = null // prevents looping
-              currentTarget.hidden = true
-            }}
-          />
-        </ div >
+            {(form.strike / form.lotSize) *
+              10 ** (-quoteMetadata.decimals + baseMetadata.decimals) *
+              (Number(form.numTokens) / 10 ** baseMetadata.decimals)}
+            <img
+              className={`h-6 w-6`}
+              src={quoteMetadata.logo}
+              onError={({ currentTarget }) => {
+                currentTarget.onerror = null // prevents looping
+                currentTarget.hidden = true
+              }}
+            />
+            ={Number(form.numTokens) / 10 ** baseMetadata.decimals}
+            <img
+              className={`h-6 w-6`}
+              src={baseMetadata.logo}
+              onError={({ currentTarget }) => {
+                currentTarget.onerror = null // prevents looping
+                currentTarget.hidden = true
+              }}
+            />
+          </div>
         </>
       )}
     </>

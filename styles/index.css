@@ -380,7 +380,7 @@ https://developer.mozilla.org/en-US/docs/Web/CSS/word-break#values */
   overflow-wrap: anywhere;
 }
 
-.gatewayButton > span:hover{
+.gatewayButton > span:hover {
   @apply !text-fgd-1;
 }
 
@@ -390,7 +390,8 @@ https://developer.mozilla.org/en-US/docs/Web/CSS/word-break#values */
 }
 
 .gatewayButton > svg {
-  filter: brightness(0) saturate(100%) invert(71%) sepia(67%) saturate(514%) hue-rotate(161deg) brightness(97%) contrast(90%);
+  filter: brightness(0) saturate(100%) invert(71%) sepia(67%) saturate(514%)
+    hue-rotate(161deg) brightness(97%) contrast(90%);
   min-width: 24px;
   padding-top: 4px;
 }
@@ -497,4 +498,41 @@ https://developer.mozilla.org/en-US/docs/Web/CSS/word-break#values */
 
 .dialect > div > button {
   border-radius: 999px !important;
+}
+
+.shared-container {
+  @apply rounded-xl border border-bkg-4 md:rounded-2xl;
+}
+
+/* V2 Banner shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.v2-banner {
+  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 50%, #7c3aed 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.v2-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
 }

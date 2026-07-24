@@ -5,14 +5,18 @@ import { DRIFT_STAKE_VOTER_PLUGIN } from 'DriftStakeVoterPlugin/constants'
 import { TOKEN_HAVER_PLUGIN } from 'TokenHaverPlugin/constants'
 
 export const VSR_PLUGIN_PKS: string[] = [
-  '4Q6WW2ouZ6V3iaNm56MTd5n2tnTm4C5fiH8miFHnAFHo',
   'vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ',
   'VotEn9AWwTFtJPJSMV5F9jsMY6QwWM5qn3XP9PATGW7',
   'VoteWPk9yyGmkX4U77nEWRJWpcc8kUfrPoghxENpstL',
   'VoteMBhDCqGLRgYpp9o7DGyq81KNmwjXQRAHStjtJsS',
   '5sWzuuYkeWLBdAv3ULrBfqA51zF7Y4rnVzereboNDCPn',
   'HBZ5oXbFBFbr8Krt2oMU7ApHFeukdRS8Rye1f3T66vg5',
+  '4Q6WW2ouZ6V3iaNm56MTd5n2tnTm4C5fiH8miFHnAFHo',
+  'vsRJM68m7i18PwzTFphgPYXTujCgxEi28knpUwSmg3q',
+  '9SJqwCQ5AJkFtC7zxfFsF6Y5dm22XzN3JEhn3N14v23t'
 ]
+
+export const CUSTOM_BIO_VSR_PLUGIN_PK = "9SJqwCQ5AJkFtC7zxfFsF6Y5dm22XzN3JEhn3N14v23t"
 
 export const HELIUM_VSR_PLUGINS_PKS: string[] = [
   HELIUM_VSR_PROGRAM_ID.toBase58(),
@@ -40,6 +44,10 @@ export const PARCL_PLUGIN_PK: string[] = [
   '2gWf5xLAzZaKX9tQj9vuXsaxTWtzTZDFRn21J3zjNVgu',
 ]
 
+export const BONK_PLUGIN_PK = ['EoKpGErCsD4UEbbY6LX4MLWBUjmoAxqKdU4fdtLuzK6M']
+
+export const TOKEN_VOTER_PK = ['HA99cuBQCCzZu1zuHN2qBxo2FBo1cxNLwKkdt6Prhy8v']
+
 export const DRIFT_PLUGIN_PK = [DRIFT_STAKE_VOTER_PLUGIN]
 
 export type PluginName =
@@ -53,6 +61,8 @@ export type PluginName =
   | 'drift'
   | 'token_haver'
   | 'parcl'
+  | 'bonk'
+  | 'token_voter'
   | 'unknown'
 
 export const findPluginName = (programId: PublicKey | undefined): PluginName =>
@@ -76,11 +86,15 @@ export const findPluginName = (programId: PublicKey | undefined): PluginName =>
     ? 'token_haver'
     : PARCL_PLUGIN_PK.includes(programId.toString())
     ? 'parcl'
+    : BONK_PLUGIN_PK.includes(programId.toString())
+    ? 'bonk'
+    : TOKEN_VOTER_PK.includes(programId.toBase58())
+    ? 'token_voter'
     : 'unknown'
 
 // Used when creating a new realm to choose which voterWeightAddin to use
 export const pluginNameToCanonicalProgramId = (
-  pluginName: PluginName
+  pluginName: PluginName,
 ): PublicKey | undefined => {
   const lastPk = (arr: string[]) => new PublicKey(arr[arr.length - 1])
 
@@ -97,6 +111,8 @@ export const pluginNameToCanonicalProgramId = (
       return lastPk(QV_PLUGINS_PKS)
     case 'pyth':
       return lastPk(PYTH_PLUGIN_PK)
+    case 'token_voter':
+      return lastPk(TOKEN_VOTER_PK)
     default:
       return undefined
   }

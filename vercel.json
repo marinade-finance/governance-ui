@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "pages/api/*.api.ts": {
+      "memory": 3009,
+      "maxDuration": 90
+    }
+  }
+}

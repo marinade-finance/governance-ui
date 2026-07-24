@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react'
 import Input from '@components/inputs/Input'
+import { LinkButton } from '@components/Button'
 import useRealm from '@hooks/useRealm'
-import { getMintMinAmountAsDecimal } from '@tools/sdk/units'
+import { getMintDecimalAmount, getMintMinAmountAsDecimal } from '@tools/sdk/units'
 import { PublicKey } from '@solana/web3.js'
 import { precision } from '@utils/formatting'
 import {
@@ -50,7 +51,7 @@ const SplTokenTransfer = ({
   >(undefined)
   const { destinationAccount, destinationAddress } = useDestination(
     connection.current,
-    address
+    address,
   )
   const [formErrors, setFormErrors] = useState({})
   const mintMinAmount = form.mintInfo
@@ -73,6 +74,17 @@ const SplTokenTransfer = ({
       propertyName: 'amount',
     })
   }
+  const setMaxAmount = () => {
+    const mintAccount = form.governedTokenAccount?.extensions?.mint?.account
+    const amount = form.governedTokenAccount?.extensions?.amount
+    if (!mintAccount || !amount) return
+
+    const maxAmount = getMintDecimalAmount(mintAccount, amount).toNumber()
+    handleSetForm({
+      value: maxAmount,
+      propertyName: 'amount',
+    })
+  }
   const validateAmountOnBlur = () => {
     const value = form.amount
 
@@ -80,8 +92,8 @@ const SplTokenTransfer = ({
       value: parseFloat(
         Math.max(
           Number(mintMinAmount),
-          Math.min(Number(Number.MAX_SAFE_INTEGER), Number(value))
-        ).toFixed(currentPrecision)
+          Math.min(Number(Number.MAX_SAFE_INTEGER), Number(value)),
+        ).toFixed(currentPrecision),
       ),
       propertyName: 'amount',
     })
@@ -134,7 +146,7 @@ const SplTokenTransfer = ({
   useEffect(() => {
     handleSetInstructions(
       { governedAccount: governedAccount, getInstruction },
-      index
+      index,
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree
   }, [form])
@@ -192,16 +204,28 @@ const SplTokenTransfer = ({
           <div className="text-xs">{destinationAccountName}</div>
         </div>
       )}
-      <Input
-        min={mintMinAmount}
-        label="Amount"
-        value={form.amount}
-        type="number"
-        onChange={setAmount}
-        step={mintMinAmount}
-        error={formErrors['amount']}
-        onBlur={validateAmountOnBlur}
-      />
+      <div>
+        <div className="flex mb-1.5 text-sm">
+          <span>Amount</span>
+          <div className="ml-auto flex items-center text-xs">
+            <LinkButton
+              onClick={setMaxAmount}
+              className="font-bold text-primary-light"
+            >
+              Max
+            </LinkButton>
+          </div>
+        </div>
+        <Input
+          min={mintMinAmount}
+          value={form.amount}
+          type="number"
+          onChange={setAmount}
+          step={mintMinAmount}
+          error={formErrors['amount']}
+          onBlur={validateAmountOnBlur}
+        />
+      </div>
     </>
   )
 }

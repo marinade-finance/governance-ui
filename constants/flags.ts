@@ -18,5 +18,7 @@ export const DELEGATOR_BATCH_VOTE_SUPPORT_BY_PLUGIN: Record<
   unknown: false,
   drift: false,
   token_haver: false,
-  parcl: false
+  parcl: false,
+  bonk: false,
+  token_voter: false,
 }

@@ -11,9 +11,7 @@ import {
   withInsertTransaction,
   withSignOffProposal,
 } from '@solana/spl-governance'
-import {
-  withCreateProposal
-} from '@realms-today/spl-governance'
+import { withCreateProposal } from '@realms-today/spl-governance'
 import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { chunk } from 'lodash'
 import { sendSignAndConfirmTransactions } from '@blockworks-foundation/mangolana/lib/transactions'
@@ -37,7 +35,7 @@ export const createBase64Proposal = async (
   descriptionLink: string,
   proposalIndex: number,
   base64Instructions: string[],
-  client?: VsrClient
+  client?: VsrClient,
 ) => {
   const instructions: TransactionInstruction[] = []
   const walletPk = wallet.publicKey!
@@ -48,7 +46,7 @@ export const createBase64Proposal = async (
   // Changed this because it is misbehaving on my local validator setup.
   const programVersion = await getGovernanceProgramVersion(
     connection,
-    governanceProgram
+    governanceProgram,
   )
 
   // V2 Approve/Deny configuration
@@ -60,17 +58,13 @@ export const createBase64Proposal = async (
     const { registrar } = getRegistrarPDA(
       realm,
       proposalMint,
-      client.program.programId
+      client.program.programId,
     )
-    const { voter } = getVoterPDA(
-      registrar,
-      walletPk,
-      client.program.programId
-    )
+    const { voter } = getVoterPDA(registrar, walletPk, client.program.programId)
     const { voterWeightPk } = getVoterWeightPDA(
       registrar,
       walletPk,
-      client.program.programId
+      client.program.programId,
     )
     voterWeightPluginPk = voterWeightPk
     const updateVoterWeightRecordIx = await client.program.methods
@@ -101,7 +95,7 @@ export const createBase64Proposal = async (
     options,
     useDenyOption,
     payer,
-    voterWeightPluginPk
+    voterWeightPluginPk,
   )
 
   await withAddSignatory(
@@ -112,13 +106,13 @@ export const createBase64Proposal = async (
     tokenOwnerRecord.pubkey,
     governanceAuthority,
     signatory,
-    payer
+    payer,
   )
 
   const signatoryRecordAddress = await getSignatoryRecordAddress(
     governanceProgram,
     proposalAddress,
-    signatory
+    signatory,
   )
   const insertInstructions: TransactionInstruction[] = []
   for (const i in base64Instructions) {
@@ -135,7 +129,7 @@ export const createBase64Proposal = async (
       0,
       0,
       [instruction],
-      payer
+      payer,
     )
   }
   withSignOffProposal(
@@ -147,7 +141,7 @@ export const createBase64Proposal = async (
     proposalAddress,
     signatory,
     signatoryRecordAddress,
-    undefined
+    undefined,
   )
 
   const txChunks = chunk([...instructions, ...insertInstructions], 2)
@@ -155,13 +149,15 @@ export const createBase64Proposal = async (
   await sendSignAndConfirmTransactions({
     connection,
     wallet,
-    transactionInstructions: txChunks.map((txChunk) => ({
-      instructionsSet: txChunk.map((tx) => ({
-        signers: [],
-        transactionInstruction: tx,
+    transactionInstructions: [
+      ...txChunks.map((txChunk) => ({
+        instructionsSet: txChunk.map((tx) => ({
+          signers: [],
+          transactionInstruction: tx,
+        })),
+        sequenceType: SequenceType.Sequential,
       })),
-      sequenceType: SequenceType.Sequential,
-    })),
+    ],
   })
   return proposalAddress
 }

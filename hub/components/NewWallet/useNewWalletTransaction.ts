@@ -29,21 +29,20 @@ const useNewWalletCallback = (
 ) => {
   const wallet = useWalletOnePointOh();
   const connection = useLegacyConnectionContext();
-  const {
-    voterWeightPkForWallet,
-    updateVoterWeightRecords,
-  } = useRealmVoterWeightPlugins();
+  const { voterWeightPkForWallet, updateVoterWeightRecords } =
+    useRealmVoterWeightPlugins();
   const voterWeightPk =
     wallet?.publicKey && voterWeightPkForWallet(wallet.publicKey);
   const programVersion = useProgramVersion();
   const realm = useRealmQuery().data?.result;
   const { result: ownVoterWeight } = useLegacyVoterWeight();
 
-  const tokenOwnerRecord = ownVoterWeight?.canCreateGovernanceUsingCouncilTokens()
-    ? ownVoterWeight.councilTokenRecord
-    : realm && ownVoterWeight?.canCreateGovernanceUsingCommunityTokens(realm)
-    ? ownVoterWeight.communityTokenRecord
-    : undefined;
+  const tokenOwnerRecord =
+    ownVoterWeight?.canCreateGovernanceUsingCouncilTokens()
+      ? ownVoterWeight.councilTokenRecord
+      : realm && ownVoterWeight?.canCreateGovernanceUsingCommunityTokens(realm)
+      ? ownVoterWeight.communityTokenRecord
+      : undefined;
 
   return useCallback(async () => {
     if (rules === undefined) throw new Error();
@@ -52,8 +51,6 @@ const useNewWalletCallback = (
     if (!wallet?.publicKey) throw new Error('not signed in');
     if (tokenOwnerRecord === undefined)
       throw new Error('insufficient voting power');
-    if (!voterWeightPk)
-      throw new Error('voterWeightPk not found for current wallet');
 
     const config = await rules2governanceConfig(
       connection.current,
@@ -64,12 +61,14 @@ const useNewWalletCallback = (
     const instructions: TransactionInstruction[] = [];
     const createNftTicketsIxs: TransactionInstruction[] = [];
 
-    const { pre: preIx, post: postIx } = await updateVoterWeightRecords(
-      wallet.publicKey,
-      convertTypeToVoterWeightAction('createGovernance'),
-    );
-    instructions.push(...preIx);
-    createNftTicketsIxs.push(...postIx);
+    if (voterWeightPk) {
+      const { pre: preIx, post: postIx } = await updateVoterWeightRecords(
+        wallet.publicKey,
+        convertTypeToVoterWeightAction('createGovernance'),
+      );
+      instructions.push(...preIx);
+      createNftTicketsIxs.push(...postIx);
+    }
 
     const governanceAddress = await withCreateGovernance(
       instructions,
@@ -81,7 +80,7 @@ const useNewWalletCallback = (
       tokenOwnerRecord.pubkey,
       wallet.publicKey,
       wallet.publicKey,
-      voterWeightPk,
+      voterWeightPk ?? undefined,
     );
     await withCreateNativeTreasury(
       instructions,

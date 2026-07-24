@@ -14,9 +14,7 @@ import {
   withAddSignatory,
   MultiChoiceType,
 } from '@solana/spl-governance'
-import {
-  withCreateProposal,
-} from '@realms-today/spl-governance'
+import { withCreateProposal } from '@realms-today/spl-governance'
 import {
   sendTransactionsV3,
   SequenceType,
@@ -29,6 +27,7 @@ import { trySentryLog } from '@utils/logs'
 import { deduplicateObjsFilter } from '@utils/instructionTools'
 import { NftVoterClient } from '@utils/uiTypes/NftVoterClient'
 import { fetchProgramVersion } from '@hooks/queries/useProgramVersionQuery'
+
 export interface InstructionDataWithHoldUpTime {
   data: InstructionData | null
   holdUpTime: number | undefined
@@ -73,7 +72,7 @@ export const createProposal = async (
   isDraft: boolean,
   options: string[],
   client?: VotingClient,
-  callbacks?: Parameters<typeof sendTransactionsV3>[0]['callbacks']
+  callbacks?: Parameters<typeof sendTransactionsV3>[0]['callbacks'],
 ): Promise<PublicKey> => {
   const instructions: TransactionInstruction[] = []
   const createNftTicketsIxs: TransactionInstruction[] = []
@@ -101,17 +100,43 @@ export const createProposal = async (
         MultiChoiceType.FullWeight,
         1,
         options.length,
-        options.length
+        options.length,
       )
     : VoteType.SINGLE_CHOICE
+
+  const proposalSeed = Keypair.generate().publicKey
+
+  const [proposalKey] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('governance'),
+      governance.toBytes(),
+      governingTokenMint.toBytes(),
+      proposalSeed.toBytes(),
+    ],
+    realm.owner,
+  )
 
   //will run only if plugin is connected with realm
   const plugin = await client?.withUpdateVoterWeightRecord(
     instructions,
     'createProposal',
     createNftTicketsIxs,
-    governance
+    governance,
   )
+
+  if (
+    instructions.length &&
+    client?.voterWeightPluginDetails.plugins?.voterWeight[0].name === 'bonk'
+  ) {
+    instructions[0].data = Buffer.concat([
+      instructions[0].data.slice(0, 9),
+      governance.toBuffer(),
+      instructions[0].data.slice(41),
+    ])
+
+    instructions[0].keys[5].pubkey = governance
+    instructions[0].keys[6].pubkey = proposalKey
+  }
 
   const proposalAddress = await withCreateProposal(
     instructions,
@@ -129,7 +154,8 @@ export const createProposal = async (
     options,
     useDenyOption,
     payer,
-    plugin?.voterWeightPk
+    plugin?.voterWeightPk,
+    proposalSeed,
   )
 
   await withAddSignatory(
@@ -140,14 +166,14 @@ export const createProposal = async (
     tokenOwnerRecord.pubkey,
     governanceAuthority,
     signatory,
-    payer
+    payer,
   )
 
   // TODO: Return signatoryRecordAddress from the SDK call
   const signatoryRecordAddress = await getSignatoryRecordAddress(
     programId,
     proposalAddress,
-    signatory
+    signatory,
   )
 
   const insertInstructions: TransactionInstruction[] = []
@@ -167,9 +193,10 @@ export const createProposal = async (
       }
       if (instruction.prerequisiteInstructionsSigners) {
         prerequisiteInstructionsSigners.push(
-          ...instruction.prerequisiteInstructionsSigners
+          ...instruction.prerequisiteInstructionsSigners,
         )
       }
+
       await withInsertTransaction(
         insertInstructions,
         programId,
@@ -182,7 +209,7 @@ export const createProposal = async (
         0,
         instruction.holdUpTime || 0,
         [instruction.data],
-        payer
+        payer,
       )
     }
   }
@@ -197,7 +224,7 @@ export const createProposal = async (
       proposalAddress,
       signatory,
       signatoryRecordAddress,
-      undefined
+      undefined,
     )
   }
 
@@ -208,21 +235,20 @@ export const createProposal = async (
   signerChunks.fill([])
 
   const deduplicatedPrerequisiteInstructions = prerequisiteInstructions.filter(
-    deduplicateObjsFilter
+    deduplicateObjsFilter,
   )
 
-  const deduplicatedPrerequisiteInstructionsSigners = prerequisiteInstructionsSigners.filter(
-    deduplicateObjsFilter
-  )
+  const deduplicatedPrerequisiteInstructionsSigners =
+    prerequisiteInstructionsSigners.filter(deduplicateObjsFilter)
 
   const prerequisiteInstructionsChunks = chunks(
     deduplicatedPrerequisiteInstructions,
-    lowestChunkBy
+    lowestChunkBy,
   )
 
   const prerequisiteInstructionsSignersChunks = chunks(
     deduplicatedPrerequisiteInstructionsSigners,
-    lowestChunkBy
+    lowestChunkBy,
   ).filter((keypairArray) => keypairArray.filter((keypair) => keypair))
 
   const signersSet = [
@@ -242,7 +268,7 @@ export const createProposal = async (
         instructionsSet: txBatchesToInstructionSetWithSigners(
           txBatch,
           signersSet,
-          batchIdx
+          batchIdx,
         ),
         sequenceType: SequenceType.Sequential,
       }
@@ -271,7 +297,7 @@ export const createProposal = async (
           instructionsSet: txBatchesToInstructionSetWithSigners(
             txBatch,
             [],
-            batchIdx
+            batchIdx,
           ),
           sequenceType: SequenceType.Parallel,
         }
@@ -281,14 +307,12 @@ export const createProposal = async (
           instructionsSet: txBatchesToInstructionSetWithSigners(
             txBatch,
             signersSet,
-            batchIdx
+            batchIdx,
           ),
           sequenceType: SequenceType.Sequential,
         }
       }),
     ]
-
-    // should add checking user has enough sol, refer castVote
 
     await sendTransactionsV3({
       connection,

@@ -25,7 +25,7 @@ export default function InspectorButton({
     InstructionExecutionStatus.Success
   const executedAtFormatted = proposalInstruction.account.executedAt
     ? dayjs(proposalInstruction.account.executedAt.toNumber() * 1000).format(
-        'DD-MM-YYYY HH:mm'
+        'DD-MM-YYYY HH:mm',
       )
     : ''
 
@@ -38,23 +38,23 @@ export default function InspectorButton({
         wallet!,
         null,
         [],
-        [...instructionData]
+        [...instructionData],
       )
 
       inspectUrl = await getExplorerInspectorUrl(connection, result.transaction)
     } else {
       try {
-        const recentActivity = await connection.current.getConfirmedSignaturesForAddress2(
+        const recentActivity = await connection.current.getSignaturesForAddress(
           proposalInstruction.pubkey,
           {
             limit: 5,
           },
-          'confirmed'
+          'confirmed',
         )
         inspectUrl = getExplorerUrl(
           connection.cluster,
           recentActivity[0].signature,
-          'tx'
+          'tx',
         )
       } catch (e) {
         console.log(e)

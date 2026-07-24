@@ -2,7 +2,7 @@ import { BigNumber } from 'bignumber.js'
 
 import { AccountType, AssetAccount } from '@utils/uiTypes/assets'
 import { AssetType, Asset } from '@models/treasury/Asset'
-import { getTreasuryAccountItemInfoV2 } from '@utils/treasuryTools'
+import { getTreasuryAccountItemInfoV2Async } from '@utils/treasuryTools'
 import TokenIcon from '@components/treasuryV2/icons/TokenIcon'
 import { WSOL_MINT } from '@components/instructions/tools'
 import { abbreviateAddress } from '@utils/formatting'
@@ -10,13 +10,14 @@ import { abbreviateAddress } from '@utils/formatting'
 import { getAccountAssetCount } from './getAccountAssetCount'
 import { fetchJupiterPrice } from '@hooks/queries/jupiterPrice'
 import { getAccountValue, getStakeAccountValue } from './getAccountValue'
+import tokenPriceService from '@utils/services/tokenPrice'
 
 export const convertAccountToAsset = async (
   account: AssetAccount,
   councilMintAddress?: string,
-  communityMintAddress?: string
+  communityMintAddress?: string,
 ): Promise<Asset | null> => {
-  const info = getTreasuryAccountItemInfoV2(account)
+  const info = await getTreasuryAccountItemInfoV2Async(account)
 
   switch (account.type) {
     case AccountType.AUXILIARY_TOKEN:
@@ -47,7 +48,7 @@ export const convertAccountToAsset = async (
             : undefined,
         totalSupply: account.extensions.mint
           ? new BigNumber(
-              account.extensions.mint.account.supply.toString()
+              account.extensions.mint.account.supply.toString(),
             ).shiftedBy(-account.extensions.mint.account.decimals)
           : undefined,
       }
@@ -65,8 +66,9 @@ export const convertAccountToAsset = async (
         ),
         price: account.extensions.mint
           ? new BigNumber(
-              (await fetchJupiterPrice(account.extensions.mint.publicKey))
-                .result?.price ?? 0
+              (await tokenPriceService.fetchTokenPrice(
+                account.extensions.mint.publicKey.toString(),
+              )) ?? 0,
             )
           : undefined,
         raw: account,
@@ -89,8 +91,9 @@ export const convertAccountToAsset = async (
         name: info.accountName || info.info?.name || info.name || info.symbol,
         price: account.extensions.mint
           ? new BigNumber(
-              (await fetchJupiterPrice(account.extensions.mint.publicKey))
-                .result?.price ?? 0
+              (await tokenPriceService.fetchTokenPrice(
+                account.extensions.mint.publicKey.toString(),
+              )) ?? 0,
             )
           : undefined,
         raw: account,
