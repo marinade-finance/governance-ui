@@ -50,9 +50,9 @@ export default function BasicDetailsForm({
   formData: BasicDetails
   currentStep: any
   totalSteps: any
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   onSubmit: Function
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   onPrevClick: Function
 }) {
   const schema = yup.object(BasicDetailsSchema).required()

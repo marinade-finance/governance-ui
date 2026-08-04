@@ -22,7 +22,7 @@ const SymmetryWithdraw = ({
 }) => {
   const {connection} = useConnection();
   const { assetAccounts } = useGovernanceAssets();
-  const [basketsSdk, setBasketSdk] = useState<BasketsSDK|undefined>(undefined);
+  const [, setBasketSdk] = useState<BasketsSDK|undefined>(undefined);
   const [form, setForm] = useState<SymmetryWithdrawForm>({
     governedAccount: undefined,
     basketAddress: undefined,
@@ -34,15 +34,11 @@ const SymmetryWithdraw = ({
   const [managedBaskets, setManagedBaskets] = useState<any>(undefined);
   const shouldBeGoverned = !!(index !== 0 && governance)
   const [assetAccountsLoaded, setAssetAccountsLoaded] = useState(false);
-  const [selectedBasket, setSelectedBasket] = useState<any>(undefined);
+  const [selectedBasket] = useState<any>(undefined);
 
   const handleSetForm = ({ propertyName, value }) => {
     setFormErrors({})
     setForm({ ...form, [propertyName]: value })
-  }
-
-  const handleSelectBasket = (basket: any) => {
-    handleSetForm({ propertyName: 'basketAddress', value: basket.basket.ownAddress })
   }
 
   useEffect(() => {

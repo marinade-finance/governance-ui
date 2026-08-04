@@ -160,10 +160,11 @@ export const useSubmitVote = () => {
         queryClient.invalidateQueries({
           queryKey: proposalQueryKeys.all(connection.current.rpcEndpoint),
         })
-        msg &&
+        if (msg) {
           queryClient.invalidateQueries({
             queryKey: [connection.cluster, 'ChatMessages'],
           })
+        }
       } catch (e) {
         console.error(e)
         notify({ type: 'error', message: e.message })

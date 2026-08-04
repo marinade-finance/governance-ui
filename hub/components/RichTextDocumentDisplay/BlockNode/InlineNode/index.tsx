@@ -15,9 +15,9 @@ export function getStyle(style: InlineStyle) {
     case InlineStyle.Small:
       return 'text-xs';
     case InlineStyle.Strikethrough:
-      'line-through';
+      return 'line-through';
     case InlineStyle.Underline:
-      'underline';
+      return 'underline';
   }
 }
 

@@ -57,7 +57,7 @@ const PythUpdatePoolAuthority = ({
         connection: connection.current,
       })
 
-      const [configAddress, _] = getConfigAddress();
+      const [configAddress] = getConfigAddress();
 
       const poolAuthorityPublicKey = new PublicKey(form.poolAuthority)
       const instruction : TransactionInstruction = {

@@ -342,7 +342,7 @@ export function EditForms(props: Props) {
                     const mint = new PublicKey(tokenMintStr);
                     setToken({ mint });
                     setTokenIsValid(true);
-                  } catch (e) {
+                  } catch {
                     setToken(null);
                     setTokenIsValid(false);
                   }

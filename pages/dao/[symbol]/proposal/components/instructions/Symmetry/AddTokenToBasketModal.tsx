@@ -1,5 +1,4 @@
 import Modal from "@components/Modal"
-import Input from "@components/inputs/Input"
 import { useEffect, useState } from "react"
 
 

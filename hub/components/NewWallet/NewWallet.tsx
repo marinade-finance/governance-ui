@@ -9,7 +9,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { NewWalletForm } from '../EditWalletRules/Form';
 import { NewWalletSummary } from '../EditWalletRules/Summary';
 import useProgramVersion from '@hooks/useProgramVersion';
-import useQueryContext from '@hooks/useQueryContext';
 import useRealm from '@hooks/useRealm';
 import useWalletOnePointOh from '@hooks/useWalletOnePointOh';
 import { Primary, Secondary } from '@hub/components/controls/Button';
@@ -52,7 +51,6 @@ function NewWalletWithDefaults({
   defaults: NonNullable<ReturnType<typeof useGovernanceDefaults>>;
 }) {
   const { symbol } = useRealm();
-  const { fmtUrlWithCluster } = useQueryContext();
 
   const wallet = useWalletOnePointOh();
   const router = useRouter();

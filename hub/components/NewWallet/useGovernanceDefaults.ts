@@ -1,5 +1,4 @@
 import { GovernanceConfig, VoteThresholdType } from '@solana/spl-governance';
-import { PublicKey } from '@solana/web3.js';
 
 import BigNumber from 'bignumber.js';
 

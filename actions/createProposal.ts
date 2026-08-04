@@ -29,6 +29,12 @@ import { trySentryLog } from '@utils/logs'
 import { deduplicateObjsFilter } from '@utils/instructionTools'
 import { NftVoterClient } from '@utils/uiTypes/NftVoterClient'
 import { fetchProgramVersion } from '@hooks/queries/useProgramVersionQuery'
+// The interface/class pair below is a deliberate declaration merge: the class
+// assigns these fields in its constructor without declaring them, and the
+// interface supplies the types. Flagged by typescript-eslint v8's new
+// no-unsafe-declaration-merging rule; kept as-is because changing the shape
+// would touch every proposal-creation call site.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface InstructionDataWithHoldUpTime {
   data: InstructionData | null
   holdUpTime: number | undefined
@@ -38,6 +44,7 @@ export interface InstructionDataWithHoldUpTime {
   prerequisiteInstructionsSigners?: (Keypair | null)[]
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class InstructionDataWithHoldUpTime {
   constructor({
     instruction,

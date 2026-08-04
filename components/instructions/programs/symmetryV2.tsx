@@ -107,7 +107,7 @@ export const SYMMETRY_V2_INSTRUCTIONS = {
       getDataUI: async (connection: Connection, data: Uint8Array) => {
 
         //@ts-ignore
-        const { amount, rebalance } = BufferLayout.struct([
+        const { amount } = BufferLayout.struct([
           BufferLayout.nu64('amount')
         ]).decode(Buffer.from(data), 8)
 
@@ -162,8 +162,8 @@ export const SYMMETRY_V2_INSTRUCTIONS = {
         let usdcIncluded = false;
         let totalWeight = 0; targetWeights.map(w => totalWeight += w);
 
-        let composition = targetComposition.map((tokenId, i) => {
-          let token = tokenData.filter(x => x.id == tokenId)[0]
+        const composition = targetComposition.map((tokenId, i) => {
+          const token = tokenData.filter(x => x.id == tokenId)[0]
           if(token.id === 0) {
             if(!usdcIncluded) {
               usdcIncluded = true;
@@ -183,7 +183,7 @@ export const SYMMETRY_V2_INSTRUCTIONS = {
         return (
           <div className="bg-black font-body text-gray-200 p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
-              <a href="https://symmetry.fi" target="_blank">
+              <a href="https://symmetry.fi" target="_blank" rel="noreferrer">
                 <svg width="48" height="48" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="400" height="400" rx="44" fill="#1A3FFF"/>
                   <path d="M232.642 233.053L166.536 233.053C143.567 233.053 130.055 241.523 118.917 252.661C100.429 271.148 103.231 296.358 103.231 296.358L232.642 296.358L296.508 232.493L232.642 168.627L232.642 233.053Z" fill="white"/>
@@ -298,13 +298,13 @@ export const SYMMETRY_V2_INSTRUCTIONS = {
           }
         };
 
-        let basketsSdk = await BasketsSDK.init(connection);
-        let tokenData = basketsSdk.getTokenListData();
+        const basketsSdk = await BasketsSDK.init(connection);
+        const tokenData = basketsSdk.getTokenListData();
         let usdcIncluded = false;
         let totalWeight = 0; targetWeights.map(w => totalWeight += w);
 
-        let composition = targetComposition.map((tokenId, i) => {
-          let token = tokenData.filter(x => x.id == tokenId)[0]
+        const composition = targetComposition.map((tokenId, i) => {
+          const token = tokenData.filter(x => x.id == tokenId)[0]
           if(token.id === 0) {
             if(!usdcIncluded) {
               usdcIncluded = true;

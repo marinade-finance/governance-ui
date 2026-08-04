@@ -22,7 +22,7 @@ const SymmetryDeposit = ({
 }) => {
   const {connection} = useConnection();
   const { assetAccounts } = useGovernanceAssets();
-  const [basketsSdk, setBasketSdk] = useState<BasketsSDK|undefined>(undefined);
+  const [, setBasketSdk] = useState<BasketsSDK|undefined>(undefined);
   const [form, setForm] = useState<SymmetryDepositForm>({
     governedAccount: undefined,
     basketAddress: undefined,

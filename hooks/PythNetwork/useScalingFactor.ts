@@ -1,4 +1,3 @@
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { determineVotingPowerType } from "@hooks/queries/governancePower";
 import useSelectedRealmPubkey from "@hooks/selectedRealm/useSelectedRealmPubkey";
 import { useConnection } from "@solana/wallet-adapter-react";

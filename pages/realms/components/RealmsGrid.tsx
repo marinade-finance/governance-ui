@@ -107,7 +107,7 @@ function RealmsGrid({
 
   function getGridRealms() {
     let storageRealms
-    if (typeof window !== undefined) {
+    if (typeof window !== 'undefined') {
       storageRealms = localStorage.getItem(STORAGE_REALMS)
     }
     return storageRealms ? JSON.parse(storageRealms) : []
@@ -116,7 +116,7 @@ function RealmsGrid({
   useEffect(() => {
     // for the anchoring of the grid to the top of the screen
     window.onscroll = () => {
-      if (gridRef?.current?.clientHeight && typeof window !== undefined) {
+      if (gridRef?.current?.clientHeight && typeof window !== 'undefined') {
         if (
           gridRef?.current?.clientHeight >= window.innerHeight / 2 &&
           editing

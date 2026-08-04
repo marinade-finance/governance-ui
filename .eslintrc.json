@@ -42,11 +42,21 @@
     "@typescript-eslint/no-non-null-assertion": 0, // days are numbered
     "@typescript-eslint/no-explicit-any": 0,
     "@typescript-eslint/no-var-requires": 0,
+    // typescript-eslint v8 replaced `no-var-requires` (disabled above) with
+    // `no-require-imports`. Kept off to preserve the existing intent: the
+    // CommonJS config files (next/jest/tailwind) and a few dynamic requires
+    // in source rely on `require()`.
+    "@typescript-eslint/no-require-imports": 0,
     "@typescript-eslint/no-use-before-define": 0,
     "@typescript-eslint/no-unused-vars": [
       2,
       {
-        "argsIgnorePattern": "^_"
+        "argsIgnorePattern": "^_",
+        // typescript-eslint v8 flipped the `caughtErrors` default from "none"
+        // to "all". This config predates that change, and the codebase has ~50
+        // deliberate `catch (e) { /* swallow */ }` blocks. Restore the default
+        // the config was written against rather than churn every catch site.
+        "caughtErrors": "none"
       }
     ]
   }

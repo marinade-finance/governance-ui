@@ -151,7 +151,7 @@ const awaitTransactionSignatureConfirmation = async ({
               promises
             )
             if (
-              typeof currentBlockHeight !== undefined &&
+              typeof currentBlockHeight !== 'undefined' &&
               timeoutBlockHeight <= currentBlockHeight!
             ) {
               logger.log('Timed out for txid: ', txid)

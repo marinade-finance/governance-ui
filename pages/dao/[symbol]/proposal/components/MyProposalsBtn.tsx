@@ -272,7 +272,7 @@ const MyProposalsBn = () => {
 
         governingTokenMint = role === "community" && realm?.account.config.councilMint ?
           realm.account.config.councilMint :
-          realm?.account.communityMint!
+          realm!.account.communityMint
       }
       
       const inst = await withRelinquishVote(

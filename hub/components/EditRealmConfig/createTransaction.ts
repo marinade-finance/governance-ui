@@ -1,5 +1,6 @@
 import { AnchorProvider, Wallet } from '@coral-xyz/anchor';
 
+import { getGovernanceProgramVersion } from '@realms-today/spl-governance';
 import {
   GatewayClient,
   QuadraticClient,
@@ -12,9 +13,6 @@ import {
   getRealm,
   SYSTEM_PROGRAM_ID,
 } from '@solana/spl-governance';
-import {
-  getGovernanceProgramVersion
-} from "@realms-today/spl-governance"
 import type {
   Connection,
   PublicKey,

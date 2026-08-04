@@ -479,7 +479,9 @@ export async function castVote(
       transactionInstructions: instructionsChunks,
       callbacks: {
         afterFirstBatchSign: () => {
-          instructionsChunks.length > 2 ? openNftVotingCountingModal() : null
+          if (instructionsChunks.length > 2) {
+            openNftVotingCountingModal()
+          }
         },
         afterAllTxConfirmed: () => {
           if (runAfterConfirmation) {

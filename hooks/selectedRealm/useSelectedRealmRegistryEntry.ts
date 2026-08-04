@@ -30,8 +30,13 @@ const useSelectedRealmRegistryEntry = () => {
       const realms =
         cluster === 'devnet' ? DEVNET_REALMS_PARSED : MAINNET_REALMS_PARSED
 
+      // When the url segment is a realm pubkey (eg the canonical
+      // /dao/899YG3yk4F66ZgbNWLHriZHTXSKk9e1kvsKEquW7L6Mo link), match on
+      // realmId. Without returning here the lookup fell through to the symbol
+      // comparison below, which a base58 pubkey can never satisfy, so certified
+      // realms opened by pubkey lost their displayName/ogImage/banner/socials.
       if (urlPubkey !== undefined) {
-        realms.find((x) => x.realmId.equals(urlPubkey)) ?? 'not found'
+        return realms.find((x) => x.realmId.equals(urlPubkey)) ?? 'not found'
       }
 
       return (

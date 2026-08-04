@@ -5,7 +5,7 @@ import {Program, Provider, Wallet} from "@coral-xyz/anchor";
 import {VoterWeightAction} from "@solana/spl-governance";
 import {convertVoterWeightActionToType} from "../lib/utils";
 import queryClient from "@hooks/queries/queryClient";
-import { getMaxVoterWeightRecordAddress, getVoterWeightRecordAddress, PythStakingClient, StakeAccountPositions } from "@pythnetwork/staking-sdk";
+import { getMaxVoterWeightRecordAddress, getVoterWeightRecordAddress, PythStakingClient } from "@pythnetwork/staking-sdk";
 
 // A wrapper for the PythClient from @pythnetwork/staking-sdk, that implements the generic plugin client interface
 export class PythVoterWeightPluginClient extends Client<any> {
@@ -24,7 +24,7 @@ export class PythVoterWeightPluginClient extends Client<any> {
         }
     }
 
-    async getMaxVoterWeightRecord(realm: PublicKey, mint: PublicKey) {
+    async getMaxVoterWeightRecord(_realm: PublicKey, _mint: PublicKey) {
         const {maxVoterWeightPk} = await this.getMaxVoterWeightRecordPDA();
         return this.client.stakingProgram.account.maxVoterWeightRecord.fetch(
             maxVoterWeightPk,

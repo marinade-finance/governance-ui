@@ -16,7 +16,6 @@ import {
 import { Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
-import { QuadraticPluginParams } from 'VoterWeightPlugins/useQuadraticVoterWeightPlugin';
 import { tryGetNftRegistrar } from 'VoteStakeRegistry/sdk/api';
 
 import { AnchorParams } from '../../../QuadraticPlugin/sdk/api';

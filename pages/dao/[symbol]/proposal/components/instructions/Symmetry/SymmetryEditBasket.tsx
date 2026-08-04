@@ -53,7 +53,6 @@ const SymmetryEditBasket = ({
   const [addTokenModal, setAddTokenModal] = useState(false);
   const [supportedTokens, setSupportedTokens] = useState<any|null>(null);
   const [assetAccountsLoaded, setAssetAccountsLoaded] = useState(false);
-  const [govAccount, setGovAccount] = useState<any>(undefined);
 
 
   const handleSetForm = ({ propertyName, value }) => {
