@@ -49,7 +49,18 @@ export const useMembersQuery = () => {
 
   const query = useQuery({
     enabled,
-    queryKey: [],
+    // This was `[]`, i.e. a single global cache slot shared by every realm,
+    // cluster and wallet. Combined with the client's 10 minute `staleTime`,
+    // navigating from one DAO to another served the previous DAO's member list
+    // and would not refetch for up to 10 minutes. The key now covers everything
+    // the query function actually reads.
+    queryKey: [
+      'useMembers',
+      connection.connection.rpcEndpoint,
+      realm?.pubkey.toString(),
+      isNftMode ?? false,
+      isNftMode ? [...usedCollectionsPks].sort() : null,
+    ],
     queryFn: async () => {
       if (!enabled) throw new Error()
 
