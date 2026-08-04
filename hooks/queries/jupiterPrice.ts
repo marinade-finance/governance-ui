@@ -49,6 +49,16 @@ function* chunks<T>(arr: T[], n: number): Generator<T[], void> {
   }
 }
 
+/**
+ * Price V3 accepts at most 50 mints per request and — unlike v4, which took 100
+ * — silently truncates: 100 ids still return HTTP 200 with only the first 50
+ * entries, no error. Batching at v4's 100 therefore dropped every mint past the
+ * 50th to a $0 price with nothing to indicate it. Measured against the live
+ * endpoint on 2026-08-04: 50 ids -> 50 entries, 51 -> 50, 100 -> 50 (exactly
+ * the first 50, in request order).
+ */
+const MAX_IDS_PER_REQUEST = 50
+
 export const jupiterPriceQueryKeys = {
   all: ['Jupiter Price API'],
   byMint: (mint: PublicKey) => [...jupiterPriceQueryKeys.all, mint.toString()],
@@ -98,7 +108,7 @@ export const useJupiterPricesByMintsQuery = (mints: PublicKey[]) => {
     enabled,
     queryKey: jupiterPriceQueryKeys.byMints(mints),
     queryFn: async () => {
-      const batches = [...chunks(mints, 100)]
+      const batches = [...chunks(mints, MAX_IDS_PER_REQUEST)]
       const responses = await Promise.all(
         batches.map(async (batch) => {
           const x = await fetch(`${URL}?ids=${batch.join(',')}`)

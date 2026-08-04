@@ -22,6 +22,9 @@ const tokenListUrl = 'https://api.jup.ag/tokens/v2/tag?query=verified'
 /** Solana mainnet, per the SPL token-list convention `TokenInfo.chainId` uses. */
 const SOLANA_MAINNET_CHAIN_ID = 101
 
+/** Maximum `ids` Price V3 will answer in one request; see `fetchTokenPrices`. */
+const MAX_IDS_PER_REQUEST = 50
+
 /**
  * An entry from `api.jup.ag/tokens/v2/tag`. Renames relative to the old
  * `token.jup.ag/strict` list: `address` -> `id`, `logoURI` -> `icon`. It also
@@ -113,8 +116,14 @@ class TokenPriceService {
   }
   async fetchTokenPrices(mintAddresses: string[]) {
     if (mintAddresses.length) {
-      //can query only 100 at once
-      const mintAddressesWithSol = chunks([...mintAddresses, WSOL_MINT], 100)
+      // Price V3 accepts at most 50 mints per request and, unlike v4 (100),
+      // truncates silently: 100 ids return HTTP 200 with only the first 50
+      // entries. Batching at 100 therefore left every mint past the 50th at a
+      // $0 price with nothing to indicate it. Measured live 2026-08-04.
+      const mintAddressesWithSol = chunks(
+        [...mintAddresses, WSOL_MINT],
+        MAX_IDS_PER_REQUEST
+      )
       for (const mintChunk of mintAddressesWithSol) {
         const symbols = mintChunk.join(',')
         try {

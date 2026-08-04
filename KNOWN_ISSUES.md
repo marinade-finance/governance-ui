@@ -181,15 +181,28 @@ Webpack analyses ESM exports statically, sees no `Wallet`, and warns. In a
 browser `isBrowser` is true, so the assignment never runs and the value would be
 `undefined` at runtime.
 
-**Why this is currently harmless.** Every one of the ten `Wallet` references in
-this repo is a *type* position — `as Wallet`, `: Wallet`,
-`Omit<Wallet, 'payer'>` — in `hooks/useWalletDeprecated.tsx`,
-`actions/createTokenizedRealm.ts`, `actions/createNFTRealm.ts`,
-`actions/addPlugins/addGatewayPlugin.ts`, `actions/addPlugins/addQVPlugin.ts`,
-`hub/components/EditRealmConfig/createTransaction.ts`,
-`VoteStakeRegistry/components/Account/LockTokensAccountWithdraw.tsx` and
-`cli/createProposalScript.ts`. There is no `new Wallet(...)` anywhere, so the
-binding is never dereferenced and the `undefined` value is never observed.
+**Why this is currently harmless.** 17 files import `Wallet` from
+`@coral-xyz/anchor`, and every use is a *type* position — `: Wallet`,
+`as Wallet`, `Omit<Wallet, 'payer'>`, `implements Wallet` — so all of them are
+erased at compile time:
+
+```
+hooks/useWalletDeprecated.tsx            actions/createTokenizedRealm.ts
+actions/createNFTRealm.ts                actions/addPlugins/addGatewayPlugin.ts
+actions/addPlugins/addQVPlugin.ts        cli/createProposalScript.ts
+hub/components/EditRealmConfig/createTransaction.ts
+VoteStakeRegistry/components/Account/LockTokensAccountWithdraw.tsx
+VoterWeightPlugins/hooks/usePlugins.ts   VoterWeightPlugins/clients/index.ts
+VoterWeightPlugins/lib/getPlugins.ts     VoterWeightPlugins/clients/PythVoterWeightPluginClient.ts
+ParclVotePlugin/ParclVoterWeightPluginClient.ts
+utils/Mango/listingTools.ts              (`class EmptyWallet implements Wallet`)
+pages/dao/[symbol]/proposal/components/instructions/Squads/MeshAddMember.tsx
+pages/dao/[symbol]/proposal/components/instructions/Squads/MeshRemoveMember.tsx
+pages/dao/[symbol]/proposal/components/instructions/Squads/MeshChangeThresholdMember.tsx
+```
+
+There is no `new Wallet(...)` anywhere (`grep -rn 'new Wallet('` is empty), so
+the binding is never dereferenced and the `undefined` value is never observed.
 
 **The actual risk.** The moment anyone uses `Wallet` as a *value* in
 browser-reachable code — `new Wallet(keypair)` — it throws
@@ -283,9 +296,15 @@ its own PR and a decision about the metadata-editing surfaces above.
 
 ## Endpoint status reference (verified 2026-08-04)
 
+Note the Price V3 batch limit: it answers at most 50 mints per request and
+**truncates silently** rather than erroring — 100 `ids` still return HTTP 200
+with only the first 50 entries. V4 took 100, so both price call sites had to drop
+their batch size to 50 (`hooks/queries/jupiterPrice.ts`,
+`utils/services/tokenPrice.tsx`); at 100 every mint past the 50th showed $0.
+
 | Purpose | Endpoint | Status |
 | --- | --- | --- |
-| Price oracle | `api.jup.ag/price/v3` | **live** (now used) |
+| Price oracle | `api.jup.ag/price/v3` | **live** (now used), max 50 `ids` per request |
 | Token list | `api.jup.ag/tokens/v2/tag?query=verified` | **live** (now used), 3,880 tokens |
 | Price oracle (old) | `price.jup.ag/v4/price` | dead, no A/AAAA record |
 | Token list (old) | `token.jup.ag/strict` | dead, no A/AAAA record |

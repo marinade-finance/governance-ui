@@ -32,6 +32,23 @@ export {
   NameRegistryState,
   getHashedName,
   getNameAccountKey,
+  /**
+   * Re-exported unchanged from `@solana/spl-name-service`.
+   *
+   * For the 4-argument form this repo uses — `(programId, nameAccount,
+   * newOwner, currentOwner)` — the emitted instruction is byte-identical to
+   * Bonfida 0.1.47's: program `namesLP…`, data `0x02 ‖ newOwner`, metas
+   * `[nameAccount (w), currentOwner (signer)]`. Verified by diffing both
+   * implementations' output.
+   *
+   * Two divergences exist beyond that form, neither reachable from this repo's
+   * single call site, but do not assume Bonfida semantics if you add one:
+   * - Bonfida took a 7th `parentOwner` argument and used it as the signer in
+   *   place of `currentOwner`. The official package has no such parameter, so a
+   *   subdomain transfer authorised by the *parent's* owner cannot be expressed.
+   * - Given `nameParent` without `parentOwner`, Bonfida appended no parent meta;
+   *   the official package appends `nameParent` as a read-only meta.
+   */
   transferInstruction,
 }
 
@@ -75,7 +92,16 @@ export interface DomainKey {
 
 /**
  * Derive the registry address for `domain`, which may be `name`, `name.sol` or
- * `sub.name.sol`. Mirrors Bonfida's `getDomainKey`.
+ * `sub.name.sol`.
+ *
+ * `pubkey`, `hashed` and `isSub` match Bonfida's `getDomainKey` exactly for root
+ * domains, subdomains and the invalid-input throw (verified by diffing both
+ * implementations). One deliberate divergence: for a root domain Bonfida
+ * returned `parent: undefined`, this returns the `.sol` TLD account it actually
+ * derived under. Use `isSub` to test for a subdomain, not `parent`.
+ *
+ * Bonfida's second `record` parameter (which prefixes the hashed subdomain with
+ * `0x01` instead of `0x00`) is not implemented; no caller here used it.
  */
 export async function getDomainKey(domain: string): Promise<DomainKey> {
   const trimmed = domain.replace(/\.sol$/, '')
