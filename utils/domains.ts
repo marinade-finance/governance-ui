@@ -5,7 +5,7 @@ import {
   NameRegistryState,
   NAME_TOKENIZER_ID,
   performReverseLookupBatch,
-} from '@bonfida/spl-name-service'
+} from './sns'
 import { Connection, ParsedAccountData, PublicKey } from '@solana/web3.js'
 
 interface Domain {
@@ -56,8 +56,11 @@ export const resolveDomain = async (
       }
     }
 
-    // Retrieve the domain's registry information
-    const { registry } = await NameRegistryState.retrieve(connection, pubkey)
+    // Retrieve the domain's registry information.
+    // NOTE: `@solana/spl-name-service` resolves to the `NameRegistryState`
+    // directly, unlike `@bonfida/spl-name-service` which wrapped it in
+    // `{ registry, nftOwner }`.
+    const registry = await NameRegistryState.retrieve(connection, pubkey)
 
     return registry.owner
   } catch (error) {

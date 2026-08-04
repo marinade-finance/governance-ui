@@ -1,4 +1,4 @@
-import { NAME_PROGRAM_ID } from '@bonfida/spl-name-service'
+import { NAME_PROGRAM_ID } from '@utils/sns'
 import { AccountMetaData } from '@solana/spl-governance'
 import { Connection, PublicKey } from '@solana/web3.js'
 

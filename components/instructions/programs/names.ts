@@ -4,7 +4,7 @@ import {
   LIDO_PROGRAM_ID_DEVNET,
 } from '@constants/pubkeys/lido'
 import { PROGRAM_ID as HELIUM_VSR_PROGRAM_ID } from '@helium/voter-stake-registry-sdk'
-import { NAME_PROGRAM_ID } from '@bonfida/spl-name-service'
+import { NAME_PROGRAM_ID } from '@utils/sns'
 
 const GOVERNANCE_PROGRAM_NAMES = {
   GqTPL6qRf5aUuqscLh8Rg2HTxPUXfhhAXDptTLhp1t2J: 'Mango Governance Program',

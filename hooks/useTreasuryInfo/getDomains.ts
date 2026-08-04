@@ -1,9 +1,6 @@
 import { Connection } from '@solana/web3.js'
 import { AssetAccount } from '@utils/uiTypes/assets'
-import {
-  getAllDomains,
-  performReverseLookupBatch,
-} from '@bonfida/spl-name-service'
+import { getAllDomains, performReverseLookupBatch } from '@utils/sns'
 import { Domain } from '@models/treasury/Domain'
 
 const getAccountDomains = async (

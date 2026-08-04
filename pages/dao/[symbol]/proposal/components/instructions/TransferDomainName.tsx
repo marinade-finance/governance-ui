@@ -11,7 +11,7 @@ import {
   DomainNameTransferForm,
   UiInstruction,
 } from '@utils/uiTypes/proposalCreationTypes'
-import { transferInstruction, NAME_PROGRAM_ID } from '@bonfida/spl-name-service'
+import { transferInstruction, NAME_PROGRAM_ID } from '@utils/sns'
 import { NewProposalContext } from '../../new'
 import GovernedAccountSelect from '../GovernedAccountSelect'
 
