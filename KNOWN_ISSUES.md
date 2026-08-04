@@ -13,9 +13,27 @@ the **write-path fallback** for the Marinade DAO (realm
 accordingly: correctness of the governance read/write paths first, cosmetics and
 non-Marinade plugins last.
 
+## Gate status
+
+All five gates pass on Node 22.22.2 / yarn 1.22.22 as of 2026-08-04:
+
+| gate | result |
+| --- | --- |
+| `yarn install --frozen-lockfile` | pass, 34.8 s from an empty `node_modules` |
+| `yarn lint` | pass, 0 errors / 69 warnings |
+| `yarn type-check` | pass, 0 errors |
+| `yarn test` | pass, 2 suites, 3 tests + 1 todo |
+| `yarn build` | pass, 4 m 45 s, 174 routes |
+
+`yarn build` needs `yarn allow-scripts` and `yarn bigint-fix` first, because
+`.yarnrc` sets `ignore-scripts true`. `yarn ci` does both.
+
+The build still prints two `Attempted import error` warnings — see issue 4 below
+for the anchor one; neither fails the build.
+
 ---
 
-## 1. 126 of 173 emitted routes are component files exposed as public pages
+## 1. 126 of 174 emitted routes are component files exposed as public pages
 
 `next.config.js:28` sets:
 
@@ -24,8 +42,9 @@ pageExtensions: ['mdx', 'md', 'jsx', 'tsx', 'api.ts'], // .ts files are not page
 ```
 
 Next.js turns **every** `.tsx` file under `pages/` into a route, including files
-that are plainly components rather than pages. The build emits **173 routes, of
-which 126** are of this kind, for example:
+that are plainly components rather than pages. Measured on this branch, the
+build emits **174 routes, of which 126** are of this kind — only 48 are real
+pages. For example:
 
 ```
 /dao/[symbol]/members/Members            /dao/[symbol]/members/VsrMembers
@@ -35,8 +54,8 @@ which 126** are of this kind, for example:
 /dao/[symbol]/proposal/[pk]/ProposalWarnings  /realms/components/RealmsDashboard
 ```
 
-Each is separately server-rendered, publicly reachable, drags in the 2.37 MB
-shared `_app` chunk, and inflates build time.
+Each is separately server-rendered, publicly reachable, drags in the 2.36 MB
+shared chunk, and inflates build time.
 
 **Why unfixed.** The correct fix — restricting `pageExtensions` to something
 like `page.tsx`, or moving every non-page file out of `pages/` — is a large
@@ -213,8 +232,8 @@ comment rather than pointing at a dead host.
 governance editing surfaces lose their metadata layer too.
 
 `hub/` also costs the whole app: `pages/_app.tsx` statically imports
-`@hub/App`, so the shared chunk is 2.37 MB before any page code, of which `_app`
-alone is 2.27 MB. Dropping `hub/` was considered and rejected as out of scope
+`@hub/App`, so the shared chunk is 2.36 MB before any page code, of which `_app`
+alone is 2.26 MB. Dropping `hub/` was considered and rejected as out of scope
 for this branch — it is the single biggest available bundle win, but it needs
 its own PR and a decision about the metadata-editing surfaces above.
 
@@ -251,6 +270,11 @@ its own PR and a decision about the metadata-editing surfaces above.
   that is not installed, which will break on the first SVG import.
 - **Effectively no test coverage of the governance path.** Two test files
   total; the real gate is ESLint plus `tsc`.
+- **CI never builds.** `.github/workflows/ci-main-tests.yml` runs `yarn ci`
+  followed by `yarn test-all` (= `lint && type-check && test`), so a change that
+  compiles under `tsc` but breaks `next build` — a bad dynamic import, a broken
+  webpack resolution — reaches `main` undetected. Adding a `yarn build` step
+  would cost roughly 5 minutes per run and is worth considering.
 - **69 `react-hooks/exhaustive-deps` warnings** remain (plus ~211 inline
   disables of the same rule). They are warnings, so `yarn lint` passes; several
   are probably real stale-closure bugs and deserve a dedicated pass.
