@@ -2,28 +2,46 @@ import { PublicKey } from '@solana/web3.js'
 import { useQuery } from '@tanstack/react-query'
 import queryClient from './queryClient'
 
-const URL = 'https://price.jup.ag/v4/price'
+// `price.jup.ag` was retired and no longer resolves (no A/AAAA records), which
+// left every USD figure in the app at 0. `api.jup.ag/price/v3` is the live
+// successor, but its response shape differs from v4 — see below.
+const URL = 'https://api.jup.ag/price/v3'
 
 /* example query
-GET https://price.jup.ag/v4/price?ids=SOL
-response: {"data":{"SOL":{"id":"So11111111111111111111111111111111111111112","mintSymbol":"SOL","vsToken":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v","vsTokenSymbol":"USDC","price":26.649616441}},"timeTaken":0.0002587199999766199}
+GET https://api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112
+response: {"So11111111111111111111111111111111111111112":{"usdPrice":73.04934526843839,"blockId":437157938,"decimals":9,"priceChange24h":0.688308086813784,"liquidity":656502529.164988,"createdAt":"2024-06-05T08:55:25.527Z"}}
 */
-/* example intentionally broken query 
-GET https://price.jup.ag/v4/price?ids=bingus 
-response: {"data":{},"timeTaken":0.00010941000005004753}
+/* example intentionally broken query
+GET https://api.jup.ag/price/v3?ids=bingus
+response: {}
 */
 
+/**
+ * Raw Price V3 entry. Differences from v4: the response is a flat map keyed by
+ * mint with no `data`/`timeTaken` wrapper, the price field is `usdPrice` rather
+ * than `price`, only mints (not symbols) may be queried, and no symbol or
+ * quote-token metadata is returned.
+ */
+type JupiterPriceV3 = {
+  usdPrice: number
+  decimals?: number
+  blockId?: number
+  priceChange24h?: number
+}
+type Response = Record<string, JupiterPriceV3 | undefined>
+
+/** Internal shape, kept stable for consumers which read `.price`. */
 type Price = {
   id: string // pubkey,
-  mintSymbol: string
-  vsToken: string // pubkey,
-  vsTokenSymbol: string
   price: number
+  decimals?: number
 }
-type Response = {
-  data: Record<string, Price> //uses whatever you input (so, pubkey OR symbol). no entry if data not found
-  timeTaken: number
-}
+
+const toPrice = (mint: string, raw: JupiterPriceV3): Price => ({
+  id: mint,
+  price: raw.usdPrice,
+  decimals: raw.decimals,
+})
 
 function* chunks<T>(arr: T[], n: number): Generator<T[], void> {
   for (let i = 0; i < arr.length; i += n) {
@@ -43,9 +61,9 @@ export const jupiterPriceQueryKeys = {
 const jupQueryFn = async (mint: PublicKey) => {
   const x = await fetch(`${URL}?ids=${mint?.toString()}`)
   const response = (await x.json()) as Response
-  const result = response.data[mint.toString()]
-  return result !== undefined
-    ? ({ found: true, result } as const)
+  const raw = response?.[mint.toString()]
+  return typeof raw?.usdPrice === 'number'
+    ? ({ found: true, result: toPrice(mint.toString(), raw) } as const)
     : ({ found: false, result: undefined } as const)
 }
 
@@ -88,10 +106,14 @@ export const useJupiterPricesByMintsQuery = (mints: PublicKey[]) => {
           return response
         })
       )
-      const data = responses.reduce(
-        (acc, next) => ({ ...acc, ...next.data }),
-        {} as Response['data']
-      )
+      const data = responses.reduce((acc, next) => {
+        for (const [mint, raw] of Object.entries(next ?? {})) {
+          if (typeof raw?.usdPrice === 'number') {
+            acc[mint] = toPrice(mint, raw)
+          }
+        }
+        return acc
+      }, {} as Record<string, Price>)
 
       //override chai price if its broken
       const chaiMint = '3jsFX1tx2Z8ewmamiwSU851GzyzM2DJMq7KWW5DM8Py3'

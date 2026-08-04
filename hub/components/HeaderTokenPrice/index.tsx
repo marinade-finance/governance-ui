@@ -16,14 +16,22 @@ interface TokenPrice {
 function useTokenPrice(symbol: string, mint: PublicKey) {
   const mintAddress = mint.toString();
 
+  // `price.jup.ag` was retired and no longer resolves. `api.jup.ag/price/v3`
+  // replaces it: the response is a flat map keyed by mint (no `data` wrapper)
+  // and the price field is `usdPrice`. It also exposes `priceChange24h`, which
+  // lets the up/down indicator show a real figure instead of a hardcoded 0.
   return useCachedValue<TokenPrice>(mintAddress, () =>
-    fetch(`https://price.jup.ag/v3/price?ids=${mintAddress}`)
+    fetch(`https://api.jup.ag/price/v3?ids=${mintAddress}`)
       .then((resp) => resp.json())
       .then((result) => {
-        const price = result.data[mintAddress].price || 0;
+        const entry = result?.[mintAddress];
+        const price = typeof entry?.usdPrice === 'number' ? entry.usdPrice : 0;
+        const percentChange =
+          typeof entry?.priceChange24h === 'number' ? entry.priceChange24h : 0;
+
         return {
-          direction: 'up',
-          percentChange: 0,
+          direction: percentChange < 0 ? 'down' : 'up',
+          percentChange: Math.abs(Number(percentChange.toFixed(2))),
           price,
         };
       }),
